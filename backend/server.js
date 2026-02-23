@@ -58,7 +58,7 @@ app.get("/api/anime", async (req, res) => {
     res.json(data);
   } catch (err) {
     console.error("🔥 /api/anime error:", err);
-    res.status(500).json({ error: "Failed to fetch anime" });
+    res.status(500).json({ error: "Failed to fetch anime : " + err.message });
   }
 });
 
