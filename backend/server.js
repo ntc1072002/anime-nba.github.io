@@ -13,7 +13,6 @@ dotenv.config();
 const require = createRequire(import.meta.url);
 const serviceAccount = require('./serviceAccountKey.json');
 
-import cors from "cors";
 
 app.use(cors({
   origin: [
