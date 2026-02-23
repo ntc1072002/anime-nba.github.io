@@ -13,6 +13,21 @@ dotenv.config();
 const require = createRequire(import.meta.url);
 const serviceAccount = require('./serviceAccountKey.json');
 
+import cors from "cors";
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://anime-nba-github-io.onrender.com"
+  ],
+  credentials: true
+}));
+
+app.use(cors());
+app.use(express.json());
+app.options("*", cors());
+// routes phía dưới
+app.use("/api", apiRoutes);
 
 /* ================== FIREBASE INIT ================== */
 admin.initializeApp({
