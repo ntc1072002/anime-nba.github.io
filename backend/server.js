@@ -5,13 +5,17 @@ import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import admin from 'firebase-admin';
 import multer from 'multer';
-import { createRequire } from 'module';
+// import { createRequire } from 'module';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const require = createRequire(import.meta.url);
+// const require = createRequire(import.meta.url);
 // lấy key từ ENV
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT not set in ENV");
+}
+
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 // admin.initializeApp({
@@ -26,21 +30,24 @@ const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 
 /* ================== FIREBASE INIT ================== */
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: "web-anime-be186.appspot.com"
-});
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+//   storageBucket: "web-anime-be186.appspot.com"
+// });
 
 
-const firestore = admin.firestore();
-const bucket = admin.storage().bucket();
+// const firestore = admin.firestore();
+// const bucket = admin.storage().bucket();
 
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "web-anime-be186.appspot.com"
+  });
+}
 
 /* ================== APP INIT ================== */
 const app = express();
-app.use(cors());
-app.use(express.json());
-
 app.use(cors({
   origin: [
     "http://localhost:5173",
@@ -656,14 +663,16 @@ app.post(
     }
 );
 
+  import FormData from "form-data";
+  import axios from "axios";
   // Upload cover image for manga to Imgbb
   app.post('/api/manga/:id/cover', authenticateJWT, requireRole('admin'), upload.single('image'), async (req, res) => {
     try {
       if (!req.file) return res.status(400).json({ error: 'image required' });
       if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
 
-      const FormData = require('form-data');
-      const axios = require('axios');
+      // const FormData = require('form-data');
+      // const axios = require('axios');
       
       const form = new FormData();
       form.append('image', req.file.buffer, `manga-${req.params.id}-cover.jpg`);
