@@ -57,6 +57,12 @@ app.get("/api/anime", async (req, res) => {
     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     res.json(data);
   } catch (err) {
+    console.log("🔥 FIRESTORE ERROR START");
+    console.log(err);
+    console.log(err.message);
+    console.log(err.stack);
+    console.log("🔥 FIRESTORE ERROR END");
+
     console.error("🔥 /api/anime error:", err);
     res.status(500).json({ error: "Failed to fetch anime : " + err.message });
   }
