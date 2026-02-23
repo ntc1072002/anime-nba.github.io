@@ -14,20 +14,6 @@ const require = createRequire(import.meta.url);
 const serviceAccount = require('./serviceAccountKey.json');
 
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://anime-nba-github-io.onrender.com"
-  ],
-  credentials: true
-}));
-
-app.use(cors());
-app.use(express.json());
-app.options("*", cors());
-// routes phía dưới
-app.use("/api", apiRoutes);
-
 /* ================== FIREBASE INIT ================== */
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -44,6 +30,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://anime-nba-github-io.onrender.com"
+  ],
+  credentials: true
+}));
+
+app.use(cors());
+app.use(express.json());
+app.options("*", cors());
+// routes phía dưới
+app.use("/api", apiRoutes);
 
 const upload = multer({ storage: multer.memoryStorage() });
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret';
