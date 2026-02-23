@@ -46,15 +46,15 @@ console.log("🔥 Service account details logged");
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    storageBucket: "web-anime-be186.appspot.com"
+    storageBucket: "web-anime-be186"
   });
 }
 console.log("🔥 Firebase init OK");
 
 // export firestore duy nhất
 const firestore = admin.firestore();
-
-export { firestore };
+const bucket = admin.storage().bucket();
+// export { firestore };
 /* ================== APP INIT ================== */
 const app = express();
 app.use(cors({
