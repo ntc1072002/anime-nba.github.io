@@ -38,11 +38,9 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(cors());
 app.use(express.json());
-app.options("*", cors());
 // routes phía dưới
-app.use("/api", apiRoutes);
+// app.use("/api", apiRoutes);
 
 const upload = multer({ storage: multer.memoryStorage() });
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret';
