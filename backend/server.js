@@ -45,7 +45,10 @@ if (!admin.apps.length) {
     storageBucket: "web-anime-be186.appspot.com"
   });
 }
+console.log("🔥 Firebase init OK");
 
+const firestore = admin.firestore();
+console.log("🔥 Firestore:", firestore);
 /* ================== APP INIT ================== */
 const app = express();
 app.use(cors({
