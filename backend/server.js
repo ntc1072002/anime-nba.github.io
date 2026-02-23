@@ -11,14 +11,16 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const require = createRequire(import.meta.url);
+// lấy key từ ENV
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-  }),
-});
+// admin.initializeApp({
+//   credential: admin.credential.cert({
+//     projectId: process.env.FIREBASE_PROJECT_ID,
+//     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+//     privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+//   }),
+// });
 
 // const firestore = admin.firestore();
 
@@ -26,7 +28,7 @@ admin.initializeApp({
 /* ================== FIREBASE INIT ================== */
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  storageBucket: "web-anime-be186"
+  storageBucket: "web-anime-be186.appspot.com"
 });
 
 
