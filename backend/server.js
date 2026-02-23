@@ -16,9 +16,6 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT not set in ENV");
 }
 
-console.log(process.env.FIREBASE_PROJECT_ID);
-console.log(process.env.FIREBASE_CLIENT_EMAIL);
-console.log(process.env.FIREBASE_PRIVATE_KEY?.slice(0, 30));
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 console.log("🔥 Service account loaded");
 console.log("FIREBASE_PROJECT_ID:", serviceAccount.project_id);
@@ -67,7 +64,7 @@ app.use(cors({
   ],
   credentials: true
 }));
-
+app.options("*", cors());
 app.use(express.json());
 // routes phía dưới
 // app.use("/api", apiRoutes);
