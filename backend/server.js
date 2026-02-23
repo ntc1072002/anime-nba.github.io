@@ -11,7 +11,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const require = createRequire(import.meta.url);
-import admin from "firebase-admin";
 
 admin.initializeApp({
   credential: admin.credential.cert({
