@@ -17,10 +17,7 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
 }
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-console.log("🔥 Firebase init OK");
 
-const firestore = admin.firestore();
-console.log("🔥 Firestore:", firestore);
 // admin.initializeApp({
 //   credential: admin.credential.cert({
 //     projectId: process.env.FIREBASE_PROJECT_ID,
@@ -48,6 +45,12 @@ if (!admin.apps.length) {
     storageBucket: "web-anime-be186.appspot.com"
   });
 }
+console.log("🔥 Firebase init OK");
+
+// export firestore duy nhất
+const firestore = admin.firestore();
+
+export { firestore };
 /* ================== APP INIT ================== */
 const app = express();
 app.use(cors({
