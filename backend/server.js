@@ -16,8 +16,15 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT not set in ENV");
 }
 
+console.log(process.env.FIREBASE_PROJECT_ID);
+console.log(process.env.FIREBASE_CLIENT_EMAIL);
+console.log(process.env.FIREBASE_PRIVATE_KEY?.slice(0, 30));
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
+console.log("🔥 Service account loaded");
+console.log("FIREBASE_PROJECT_ID:", serviceAccount.project_id);
+console.log("FIREBASE_CLIENT_EMAIL:", serviceAccount.client_email);
+console.log("FIREBASE_PRIVATE_KEY:", serviceAccount.private_key ? "Loaded" : "Not found");
+console.log("🔥 Service account details logged");
 // admin.initializeApp({
 //   credential: admin.credential.cert({
 //     projectId: process.env.FIREBASE_PROJECT_ID,
