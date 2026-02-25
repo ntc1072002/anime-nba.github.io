@@ -12,16 +12,16 @@ dotenv.config();
 
 // const require = createRequire(import.meta.url);
 // lấy key từ ENV
-if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-  throw new Error("FIREBASE_SERVICE_ACCOUNT not set in ENV");
-}
+// if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+//   throw new Error("FIREBASE_SERVICE_ACCOUNT not set in ENV");
+// }
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-console.log("🔥 Service account loaded");
-console.log("FIREBASE_PROJECT_ID:", serviceAccount.project_id);
-console.log("FIREBASE_CLIENT_EMAIL:", serviceAccount.client_email);
-console.log("FIREBASE_PRIVATE_KEY:", serviceAccount.private_key);
-console.log("🔥 Service account details logged");
+// const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+// console.log("🔥 Service account loaded");
+// console.log("FIREBASE_PROJECT_ID:", serviceAccount.project_id);
+// console.log("FIREBASE_CLIENT_EMAIL:", serviceAccount.client_email);
+// console.log("FIREBASE_PRIVATE_KEY:", serviceAccount.private_key);
+// console.log("🔥 Service account details logged");
 // admin.initializeApp({
 //   credential: admin.credential.cert({
 //     projectId: process.env.FIREBASE_PROJECT_ID,
@@ -45,9 +45,9 @@ console.log("🔥 Service account details logged");
 
 admin.initializeApp({
   credential: admin.credential.cert({
-    projectId: serviceAccount.project_id,
-    clientEmail: serviceAccount.client_email,
-    privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'),
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
   }),
   storageBucket: "web-anime-be186"
 });
