@@ -44,9 +44,13 @@ console.log("🔥 Service account details logged");
 // const bucket = admin.storage().bucket();
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: "web-anime-be186"
+  credential: admin.credential.cert({
+    projectId: serviceAccount.project_id,
+    clientEmail: serviceAccount.client_email,
+    privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'),
   }),
+  storageBucket: "web-anime-be186"
+});
 console.log("🔥 Firebase init OK");
 
 // export firestore duy nhất
