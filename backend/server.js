@@ -7,6 +7,7 @@ import admin from 'firebase-admin';
 import multer from 'multer';
 // import { createRequire } from 'module';
 import dotenv from 'dotenv';
+import admin from "firebase-admin";
 
 dotenv.config();
 
@@ -44,19 +45,15 @@ console.log("🔥 Service account details logged");
 // const bucket = admin.storage().bucket();
 
 admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: serviceAccount.project_id,
-    clientEmail: serviceAccount.client_email,
-    privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'),
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "web-anime-be186"
   }),
-  storageBucket: "web-anime-be186"
-});
 console.log("🔥 Firebase init OK");
 
 // export firestore duy nhất
 const firestore = admin.firestore();
 const bucket = admin.storage().bucket();
-// export { firestore };
+export const db = admin.firestore();
 /* ================== APP INIT ================== */
 const app = express();
 app.use(cors({
@@ -303,31 +300,31 @@ app.post('/auth/login', async (req, res) => {
 
 
 /* ================== AUTH GOOGLE / FACEBOOK ================== */
-// app.post('/auth/firebase', verifyFirebaseToken, async (req, res) => {
-//   const { uid, email, name } = req.user;
+app.post('/auth/firebase', verifyFirebaseToken, async (req, res) => {
+  const { uid, email, name } = req.user;
 
-//   // Ensure user document uses Firebase UID as doc id for consistent lookup
-//   const userRef = firestore.collection('users').doc(uid);
-//   const userDoc = await userRef.get();
-//   if (userDoc.exists) {
-//     const data = userDoc.data();
-//     const token = jwt.sign({ id: uid, username: data.username, role: data.role }, JWT_SECRET);
-//     return res.json({ token });
-//   }
+  // Ensure user document uses Firebase UID as doc id for consistent lookup
+  const userRef = firestore.collection('users').doc(uid);
+  const userDoc = await userRef.get();
+  if (userDoc.exists) {
+    const data = userDoc.data();
+    const token = jwt.sign({ id: uid, username: data.username, role: data.role }, JWT_SECRET);
+    return res.json({ token });
+  }
 
-//   // create profile document keyed by uid
-//   await userRef.set({
-//     username: email || name || uid,
-//     password_hash: null,
-//     role: 'user',
-//     provider: 'firebase',
-//     provider_id: uid,
-//     created_at: new Date()
-//   });
+  // create profile document keyed by uid
+  await userRef.set({
+    username: email || name || uid,
+    password_hash: null,
+    role: 'user',
+    provider: 'firebase',
+    provider_id: uid,
+    created_at: new Date()
+  });
 
-//   const token = jwt.sign({ id: uid, username: email || name, role: 'user' }, JWT_SECRET);
-//   res.json({ token });
-// });
+  const token = jwt.sign({ id: uid, username: email || name, role: 'user' }, JWT_SECRET);
+  res.json({ token });
+});
 
 
 /* ================== MANGA ================== */
