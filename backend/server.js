@@ -7,7 +7,6 @@ import admin from 'firebase-admin';
 import multer from 'multer';
 // import { createRequire } from 'module';
 import dotenv from 'dotenv';
-import admin from "firebase-admin";
 
 dotenv.config();
 
