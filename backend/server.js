@@ -49,7 +49,7 @@ admin.initializeApp({
     clientEmail: serviceAccount.client_email,
     privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'),
   }),
-  storageBucket: "web-anime-be186.appspot.com"
+  storageBucket: "web-anime-be186"
 });
 console.log("🔥 Firebase init OK");
 
@@ -303,31 +303,31 @@ app.post('/auth/login', async (req, res) => {
 
 
 /* ================== AUTH GOOGLE / FACEBOOK ================== */
-app.post('/auth/firebase', verifyFirebaseToken, async (req, res) => {
-  const { uid, email, name } = req.user;
+// app.post('/auth/firebase', verifyFirebaseToken, async (req, res) => {
+//   const { uid, email, name } = req.user;
 
-  // Ensure user document uses Firebase UID as doc id for consistent lookup
-  const userRef = firestore.collection('users').doc(uid);
-  const userDoc = await userRef.get();
-  if (userDoc.exists) {
-    const data = userDoc.data();
-    const token = jwt.sign({ id: uid, username: data.username, role: data.role }, JWT_SECRET);
-    return res.json({ token });
-  }
+//   // Ensure user document uses Firebase UID as doc id for consistent lookup
+//   const userRef = firestore.collection('users').doc(uid);
+//   const userDoc = await userRef.get();
+//   if (userDoc.exists) {
+//     const data = userDoc.data();
+//     const token = jwt.sign({ id: uid, username: data.username, role: data.role }, JWT_SECRET);
+//     return res.json({ token });
+//   }
 
-  // create profile document keyed by uid
-  await userRef.set({
-    username: email || name || uid,
-    password_hash: null,
-    role: 'user',
-    provider: 'firebase',
-    provider_id: uid,
-    created_at: new Date()
-  });
+//   // create profile document keyed by uid
+//   await userRef.set({
+//     username: email || name || uid,
+//     password_hash: null,
+//     role: 'user',
+//     provider: 'firebase',
+//     provider_id: uid,
+//     created_at: new Date()
+//   });
 
-  const token = jwt.sign({ id: uid, username: email || name, role: 'user' }, JWT_SECRET);
-  res.json({ token });
-});
+//   const token = jwt.sign({ id: uid, username: email || name, role: 'user' }, JWT_SECRET);
+//   res.json({ token });
+// });
 
 
 /* ================== MANGA ================== */
