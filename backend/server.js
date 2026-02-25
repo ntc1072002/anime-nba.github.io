@@ -49,6 +49,7 @@ admin.initializeApp({
     clientEmail: serviceAccount.client_email,
     privateKey: serviceAccount.private_key.replace(/\\n/g, '\n'),
   }),
+  storageBucket: "web-anime-be186.appspot.com"
 });
 console.log("🔥 Firebase init OK");
 
