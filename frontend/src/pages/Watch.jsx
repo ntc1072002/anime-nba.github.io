@@ -1,102 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API_BASE } from '../config.js';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export default function Watch({ data = [], loading = false }) {
   return (
     <div className="col right">
@@ -263,7 +167,7 @@ function AnimeCard({ anime }) {
             {episodes.slice(0, 6).map(ep => (
               <a
                 key={ep.id}
-                href={`#/watch/${anime.id}/episode/${ep.id}`}
+                href={`#/watch/${anime.id}/${ep.id}`}
                 style={{
                   padding: '6px 10px',
                   background: '#0f0f1a',
