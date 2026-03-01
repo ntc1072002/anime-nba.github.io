@@ -760,7 +760,13 @@ function UsersPanel() {
       if (!res.ok) throw new Error(j.error || 'Failed');
       setStatus({ ok: true, msg: `Role updated for ${j.username}` });
       // update local list
-      setUsers(prev => prev.map(u => u.id === j.id ? j : u));
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === j.id
+            ? { ...u, ...j } // ✅ merge
+            : u
+        )
+      );
     } catch (err) {
       setStatus({ ok: false, msg: err.message });
     }
