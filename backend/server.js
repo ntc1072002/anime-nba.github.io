@@ -56,15 +56,27 @@ const firestore = admin.firestore();
 const bucket = admin.storage().bucket();
 export const db = admin.firestore();
 /* ================== APP INIT ================== */
+/* ================== APP INIT ================== */
 const app = express();
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://anime-nba-github-io.onrender.com"
-  ],
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (
+      !origin ||
+      origin.includes("onrender.com") ||
+      origin.includes("localhost")
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
-}));
-app.options("*", cors());
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
 app.use(express.json());
 // routes phía dưới
 // app.use("/api", apiRoutes);
