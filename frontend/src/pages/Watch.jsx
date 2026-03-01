@@ -167,7 +167,9 @@ function AnimeCard({ anime }) {
             {episodes.slice(0, 6).map(ep => (
               <a
                 key={ep.id}
-                href={`#/watch/${anime.id}/${ep.id}`}
+                href={`#/watch/${anime.id}/episode/${ep.id}`}
+                // href={`#/watch/${id}/episode/${ep.id}`}
+                // onClick={e => { e.preventDefault(); setCurrentEpisode(ep.id); }}
                 style={{
                   padding: '6px 10px',
                   background: '#0f0f1a',
@@ -188,12 +190,13 @@ function AnimeCard({ anime }) {
                   e.target.style.borderColor = 'rgba(136, 238, 255, 0.2)';
                 }}
               >
-                Tập {ep.number}
+                Tập zzz {ep.number}
               </a>
             ))}
             {episodes.length > 6 && (
               <a
-                href={`#/watch/${anime.id}`}
+                href={`#/watch/${id}/episode/${ep.id}`}
+                
                 style={{
                   padding: '6px 10px',
                   background: '#0f0f1a',
