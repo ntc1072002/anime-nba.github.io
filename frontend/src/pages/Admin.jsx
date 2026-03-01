@@ -757,8 +757,8 @@ function UsersPanel() {
     try {
       const res = await authFetch(`/api/admin/users/${userId}/role`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) });
       const j = await res.json();
-      if (!res.ok) throw new Error(j.error || 'Failed');
-      setStatus({ ok: true, msg: `Role updated for ${j.username}` });
+      if (!res.ok) throw new Error(j.error || 'Thất bại!');
+      setStatus({ ok: true, msg: `Quyền hạn đã được cấp cho ${j.username} : ${j.role}` });
       // update local list
       setUsers(prev =>
         prev.map(u =>
@@ -794,11 +794,11 @@ function UsersPanel() {
           <tbody>
             {users.map(u => (
               <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
-                <td style={{ padding: 8 }}>{u.id}</td>
-                <td style={{ padding: 8 }}>{u.username}</td>
-                <td style={{ padding: 8 }}>{u.role}</td>
-                <td style={{ padding: 8 }}>{formatDate(u.created_at)}</td>
-                <td style={{ padding: 8 }}>
+                <td style={{ padding: 0 }}>{u.id}</td>
+                <td style={{ padding: 0 }}>{u.username}</td>
+                <td style={{ padding: 0 }}>{u.role}</td>
+                <td style={{ padding: 0 }}>{formatDate(u.created_at)}</td>
+                <td style={{ padding: 0 }}>
                   {currentUser && currentUser.id === u.id ? <em>(you)</em> : (
                     <>
                       <button className={u.role === 'admin' ? 'btn' : 'btn secondary'} disabled={updatingId === u.id} onClick={async () => { setUpdatingId(u.id); await changeRole(u.id, u.role === 'admin' ? 'user' : 'admin'); setUpdatingId(null); }}>{u.role === 'admin' ? 'Remove admin' : 'Make admin'}</button>
