@@ -16,7 +16,7 @@ export default function Admin() {
     setStatus(null);
     try {
       const payload = type === "manga" ? { title, description } : { title, embed_url: embedUrl };
-  const res = await authFetch(`/api/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await authFetch(`/api/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
       setStatus({ ok: true, msg: `${type} added (id: ${data.id})` });
@@ -42,7 +42,7 @@ export default function Admin() {
         const animes = await fetchAnimeList();
         if (type === 'manga') setTargetMangaId(data.id);
         if (type === 'anime') setTargetAnimeId(data.id);
-      } catch (_) {}
+      } catch (_) { }
     } catch (err) {
       setStatus({ ok: false, msg: err.message });
     }
@@ -53,14 +53,14 @@ export default function Admin() {
   const [animeList, setAnimeList] = React.useState([]);
 
   const fetchMangaList = React.useCallback(() => {
-  return fetch(`${API_BASE}/api/manga`)
+    return fetch(`${API_BASE}/api/manga`)
       .then(r => r.json())
       .then(d => { setMangaList(d || []); return d || []; })
       .catch(() => { setMangaList([]); return []; });
   }, []);
 
   const fetchAnimeList = React.useCallback(() => {
-  return fetch(`${API_BASE}/api/anime`)
+    return fetch(`${API_BASE}/api/anime`)
       .then(r => r.json())
       .then(d => { setAnimeList(d || []); return d || []; })
       .catch(() => { setAnimeList([]); return []; });
@@ -96,21 +96,21 @@ export default function Admin() {
   // when targetMangaId changes, fetch chapters to propose next chapter number
   React.useEffect(() => {
     if (!targetMangaId) return;
-  fetch(`${API_BASE}/api/manga/${targetMangaId}/chapters`).then(r=>r.json()).then(d=>{
-      const arr = d||[];
-      const max = arr.reduce((m,i)=> Math.max(m, Number(i.number||0)), 0);
-      setChapterNumber(max+1 || 1);
-    }).catch(()=>{});
+    fetch(`${API_BASE}/api/manga/${targetMangaId}/chapters`).then(r => r.json()).then(d => {
+      const arr = d || [];
+      const max = arr.reduce((m, i) => Math.max(m, Number(i.number || 0)), 0);
+      setChapterNumber(max + 1 || 1);
+    }).catch(() => { });
   }, [targetMangaId]);
 
   // when targetAnimeId changes, fetch episodes to propose next episode number
   React.useEffect(() => {
     if (!targetAnimeId) return;
-  fetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes`).then(r=>r.json()).then(d=>{
-      const arr = d||[];
-      const max = arr.reduce((m,i)=> Math.max(m, Number(i.number||0)), 0);
-      setEpisodeNumber(max+1 || 1);
-    }).catch(()=>{});
+    fetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes`).then(r => r.json()).then(d => {
+      const arr = d || [];
+      const max = arr.reduce((m, i) => Math.max(m, Number(i.number || 0)), 0);
+      setEpisodeNumber(max + 1 || 1);
+    }).catch(() => { });
   }, [targetAnimeId]);
 
   // Chapters & Episodes lists and edit states for admin management
@@ -146,46 +146,46 @@ export default function Admin() {
     try {
       // build images array from structured list; keep compatibility if list empty
       let images = [];
-      const hasStructured = chapterImagesList && chapterImagesList.some(i=>i.url && i.url.trim());
+      const hasStructured = chapterImagesList && chapterImagesList.some(i => i.url && i.url.trim());
       if (hasStructured) {
         images = chapterImagesList
-          .filter(i=>i.url && i.url.trim())
-          .map(i=>({ order: Number(i.order)||1, url: i.url.trim() }))
-          .sort((a,b)=>a.order - b.order);
+          .filter(i => i.url && i.url.trim())
+          .map(i => ({ order: Number(i.order) || 1, url: i.url.trim() }))
+          .sort((a, b) => a.order - b.order);
       } else {
-        images = chapterImages.split(',').map(s=>s.trim()).filter(Boolean).map((u, idx)=>({ order: idx+1, url: u }));
+        images = chapterImages.split(',').map(s => s.trim()).filter(Boolean).map((u, idx) => ({ order: idx + 1, url: u }));
       }
 
-  const res = await authFetch(`/api/manga/${targetMangaId}/chapters`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ number: Number(chapterNumber), title: chapterTitle, images }) });
+      const res = await authFetch(`/api/manga/${targetMangaId}/chapters`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(chapterNumber), title: chapterTitle, images }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       setStatus({ ok: true, msg: `Chapter added (id: ${data.id})` });
-      setChapterTitle(''); setChapterImages(''); setChapterNumber(chapterNumber+1);
-      setChapterImagesList([{ url: '', order: chapterNumber+1 }]);
-    } catch (err) { setStatus({ ok:false, msg: err.message }); }
+      setChapterTitle(''); setChapterImages(''); setChapterNumber(chapterNumber + 1);
+      setChapterImagesList([{ url: '', order: chapterNumber + 1 }]);
+    } catch (err) { setStatus({ ok: false, msg: err.message }); }
   }
 
   async function addEpisode(e) {
     e.preventDefault();
     try {
-         // build images array from structured list; keep compatibility if list empty
+      // build images array from structured list; keep compatibility if list empty
       let images = [];
-      const hasStructured = episodeImagesList && episodeImagesList.some(i=>i.url && i.url.trim());
+      const hasStructured = episodeImagesList && episodeImagesList.some(i => i.url && i.url.trim());
       if (hasStructured) {
         images = episodeImagesList
-          .filter(i=>i.url && i.url.trim())
-          .map(i=>({ order: Number(i.order)||1, url: i.url.trim() }))
-          .sort((a,b)=>a.order - b.order);
+          .filter(i => i.url && i.url.trim())
+          .map(i => ({ order: Number(i.order) || 1, url: i.url.trim() }))
+          .sort((a, b) => a.order - b.order);
       } else {
-        images = episodeImagesList.split(',').map(s=>s.trim()).filter(Boolean).map((u, idx)=>({ order: idx+1, url: u }));
+        images = episodeImagesList.split(',').map(s => s.trim()).filter(Boolean).map((u, idx) => ({ order: idx + 1, url: u }));
       }
-  const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed, images }) });
+      const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed, images }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
-      setStatus({ ok:true, msg: `Episode added (id: ${data.id})` });
-      setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber+1);
-      setEpisodeImagesList([{ url: '', order: episodeNumber+1 }]);
-    } catch (err) { setStatus({ ok:false, msg: err.message }); }
+      setStatus({ ok: true, msg: `Episode added (id: ${data.id})` });
+      setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber + 1);
+      setEpisodeImagesList([{ url: '', order: episodeNumber + 1 }]);
+    } catch (err) { setStatus({ ok: false, msg: err.message }); }
   }
 
   return (
@@ -195,59 +195,60 @@ export default function Admin() {
 
         <div className="tabs">
           <div className="tab-buttons">
-            <button type="button" className={`tab-button ${tab==='content'?'active':''}`} onClick={()=>setTab('content')}>➕ Thêm nội dung</button>
-            <button type="button" className={`tab-button ${tab==='mangas'?'active':''}`} onClick={()=>setTab('mangas')}>📖 Quản trị Truyện</button>
-            <button type="button" className={`tab-button ${tab==='animes'?'active':''}`} onClick={()=>setTab('animes')}>🎬 Quản trị Anime</button>
-            <button type="button" className={`tab-button ${tab==='chapters'?'active':''}`} onClick={()=>setTab('chapters')}>📄 Thêm chương</button>
-            <button type="button" className={`tab-button ${tab==='episodes'?'active':''}`} onClick={()=>setTab('episodes')}>🎞️ Thêm tập</button>
-            <button type="button" className={`tab-button ${tab==='users'?'active':''}`} onClick={()=>setTab('users')}>👥 Users</button>
+            <button type="button" className={`tab-button ${tab === 'content' ? 'active' : ''}`} onClick={() => setTab('content')}>➕ Thêm nội dung</button>
+            <button type="button" className={`tab-button ${tab === 'mangas' ? 'active' : ''}`} onClick={() => setTab('mangas')}>📖 Quản trị Truyện</button>
+            <button type="button" className={`tab-button ${tab === 'animes' ? 'active' : ''}`} onClick={() => setTab('animes')}>🎬 Quản trị Anime</button>
+            <button type="button" className={`tab-button ${tab === 'chapters' ? 'active' : ''}`} onClick={() => setTab('chapters')}>📄 Thêm chương</button>
+            <button type="button" className={`tab-button ${tab === 'episodes' ? 'active' : ''}`} onClick={() => setTab('episodes')}>🎞️ Thêm tập</button>
+            <button type="button" className={`tab-button ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>👥 Users</button>
           </div>
 
-          <div className="tab-panel" style={{ display: tab==='content' ? 'block' : 'none' }}>
+          <div className="tab-panel" style={{ display: tab === 'content' ? 'block' : 'none' }}>
             <h3>Thêm truyện / anime</h3>
             <form className="admin-form" onSubmit={handleSubmit}>
-          <div className="form-row">
-            <label>Loại</label>
-            <select value={type} onChange={e => setType(e.target.value)}>
-              <option value="manga">Truyện (manga)</option>
-              <option value="anime">Anime (video)</option>
-            </select>
-          </div>
+              <div className="form-row">
+                <label>Loại</label>
+                <select value={type} onChange={e => setType(e.target.value)}>
+                  <option value="manga">Truyện (manga)</option>
+                  <option value="anime">Anime (video)</option>
+                </select>
+              </div>
 
-          <div className="form-row">
-            <label>Tiêu đề</label>
-            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Tiêu đề" required />
-          </div>
+              <div className="form-row">
+                <label>Tiêu đề</label>
+                <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Tiêu đề" required />
+              </div>
 
-          <div className="form-row">
-            <label>Ảnh bìa (tùy chọn)</label>
-            <input  key={fileKey} type="file" accept="image/*" onChange={e => { setCoverFile(e.target.files?.[0] || null);}} />
-          </div>
+              <div className="form-row">
+                <label>Ảnh bìa (tùy chọn)</label>
+                <input key={fileKey} type="file" accept="image/*" onChange={e => { setCoverFile(e.target.files?.[0] || null); }} />
+              </div>
 
-          {type === "manga" ? (
-            <div className="form-row">
-              <label>Mô tả</label>
-              <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" />
-            </div>
-          ) : (
-            <div className="form-row">
-              <label>Embed URL (ví dụ từ YouTube)</label>
-              <input value={embedUrl} onChange={e => setEmbedUrl(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" required />
-            </div>
-          )}
+              {/* {type === "manga" ? ( */}
+              <div className="form-row">
+                <label>Mô tả</label>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" />
+              </div>
+              {type === "anime" ? (
+                <div className="form-row">
+                  <label>Embed URL (ví dụ từ YouTube)</label>
+                  <input value={embedUrl} onChange={e => setEmbedUrl(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" required />
+                </div>
+              ) : null
+              }
 
-          <div className="form-actions">
-            <button className="btn" type="submit">Thêm {type}</button>
-            <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setEmbedUrl(""); setCoverFile(null); setStatus(null); setCoverFile(null); setEpisodeImagesList([{ url: '', order: 1 }]);}}>Reset</button>
-            <div style={{ flex: 1 }} />
-            {status && (
-              <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88" }}>{status.msg}</div>
-            )}
-          </div>
+              <div className="form-actions">
+                <button className="btn" type="submit">Thêm {type}</button>
+                <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setEmbedUrl(""); setCoverFile(null); setStatus(null); setCoverFile(null); setEpisodeImagesList([{ url: '', order: 1 }]); }}>Reset</button>
+                <div style={{ flex: 1 }} />
+                {status && (
+                  <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88" }}>{status.msg}</div>
+                )}
+              </div>
             </form>
           </div>
 
-          <div className="tab-panel" style={{ display: tab==='chapters' ? 'block' : 'none' }}>
+          <div className="tab-panel" style={{ display: tab === 'chapters' ? 'block' : 'none' }}>
             <h3>Quản lý chương</h3>
             <div style={{ display: 'flex', gap: 16 }}>
               <div style={{ flex: 1 }}>
@@ -255,13 +256,13 @@ export default function Admin() {
                 <form className="admin-form" onSubmit={addChapter}>
                   <div className="form-row">
                     <label>Chọn truyện</label>
-                    <select value={targetMangaId} onChange={e=>setTargetMangaId(e.target.value)}>
-                      {mangaList.map(m=> <option key={m.id} value={m.id}>{m.title} (id:{m.id})</option>)}
+                    <select value={targetMangaId} onChange={e => setTargetMangaId(e.target.value)}>
+                      {mangaList.map(m => <option key={m.id} value={m.id}>{m.title} (id:{m.id})</option>)}
                     </select>
                   </div>
-                  <div className="form-row"><label>Số chương</label><input type="number" value={chapterNumber} onChange={e=>setChapterNumber(Number(e.target.value))} min={1} /></div>
-                  <div className="form-row"><label>Tiêu đề chương</label><input value={chapterTitle} onChange={e=>setChapterTitle(e.target.value)} /></div>
-                  <div className="form-row"><label>Danh sách ảnh (URL phân tách bằng dấu phẩy)</label><textarea value={chapterImages} onChange={e=>setChapterImages(e.target.value)} placeholder="https://.../1.jpg, https://.../2.jpg" /></div>
+                  <div className="form-row"><label>Số chương</label><input type="number" value={chapterNumber} onChange={e => setChapterNumber(Number(e.target.value))} min={1} /></div>
+                  <div className="form-row"><label>Tiêu đề chương</label><input value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} /></div>
+                  <div className="form-row"><label>Danh sách ảnh (URL phân tách bằng dấu phẩy)</label><textarea value={chapterImages} onChange={e => setChapterImages(e.target.value)} placeholder="https://.../1.jpg, https://.../2.jpg" /></div>
                   <div className="form-actions"><button className="btn" type="submit">Thêm chương</button></div>
                 </form>
               </div>
@@ -279,17 +280,17 @@ export default function Admin() {
                       <div key={c.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                         {editChapterId === c.id ? (
                           <div style={{ flex: 1, display: 'flex', gap: 8 }}>
-                            <input style={{ width: 80 }} value={editChapterData.number || ''} onChange={e=> setEditChapterData(prev=> ({...prev, number: e.target.value}))} />
-                            <input style={{ flex: 1 }} value={editChapterData.title || ''} onChange={e=> setEditChapterData(prev=> ({...prev, title: e.target.value}))} />
-                            <button className="btn" onClick={async ()=> {
+                            <input style={{ width: 80 }} value={editChapterData.number || ''} onChange={e => setEditChapterData(prev => ({ ...prev, number: e.target.value }))} />
+                            <input style={{ flex: 1 }} value={editChapterData.title || ''} onChange={e => setEditChapterData(prev => ({ ...prev, title: e.target.value }))} />
+                            <button className="btn" onClick={async () => {
                               try {
-                                const res = await authFetch(`/api/manga/${targetMangaId}/chapters/${editChapterId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editChapterData) });
+                                const res = await authFetch(`/api/manga/${targetMangaId}/chapters/${editChapterId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editChapterData) });
                                 const j = await res.json();
                                 if (!res.ok) throw new Error(j.error || 'Failed');
                                 setEditChapterId(null); setEditChapterData({}); fetchChapters(targetMangaId);
                               } catch (err) { alert(err.message); }
                             }}>Lưu</button>
-                            <button className="btn secondary" onClick={()=> { setEditChapterId(null); setEditChapterData({}); }}>Hủy</button>
+                            <button className="btn secondary" onClick={() => { setEditChapterId(null); setEditChapterData({}); }}>Hủy</button>
                           </div>
                         ) : (
                           <>
@@ -297,8 +298,8 @@ export default function Admin() {
                               <strong>Chap {c.number}</strong> — <span style={{ color: '#aaa' }}>{c.title || 'Không tiêu đề'}</span>
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
-                              <button className="btn" onClick={()=> { setEditChapterId(c.id); setEditChapterData({ number: c.number, title: c.title, images: c.images }); }}>Sửa</button>
-                              <button className="btn secondary" onClick={async ()=> {
+                              <button className="btn" onClick={() => { setEditChapterId(c.id); setEditChapterData({ number: c.number, title: c.title, images: c.images }); }}>Sửa</button>
+                              <button className="btn secondary" onClick={async () => {
                                 if (!confirm('Xóa chương này?')) return;
                                 try {
                                   const res = await authFetch(`/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
@@ -317,7 +318,7 @@ export default function Admin() {
             </div>
           </div>
 
-          <div className="tab-panel" style={{ display: tab==='episodes' ? 'block' : 'none' }}>
+          <div className="tab-panel" style={{ display: tab === 'episodes' ? 'block' : 'none' }}>
             <h3>Quản lý tập</h3>
             <div style={{ display: 'flex', gap: 16 }}>
               <div style={{ flex: 1 }}>
@@ -325,13 +326,13 @@ export default function Admin() {
                 <form className="admin-form" onSubmit={addEpisode}>
                   <div className="form-row">
                     <label>Chọn anime</label>
-                    <select value={targetAnimeId} onChange={e=>setTargetAnimeId(e.target.value)}>
-                      {animeList.map(a=> <option key={a.id} value={a.id}>{a.title} (id:{a.id})</option>)}
+                    <select value={targetAnimeId} onChange={e => setTargetAnimeId(e.target.value)}>
+                      {animeList.map(a => <option key={a.id} value={a.id}>{a.title} (id:{a.id})</option>)}
                     </select>
                   </div>
-                  <div className="form-row"><label>Số tập</label><input type="number" value={episodeNumber} onChange={e=>setEpisodeNumber(e.target.value)} min={1} /></div>
-                  <div className="form-row"><label>Tiêu đề tập</label><input value={episodeTitle} onChange={e=>setEpisodeTitle(e.target.value)} /></div>
-                  <div className="form-row"><label>Embed URL</label><input value={episodeEmbed} onChange={e=>setEpisodeEmbed(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" /></div>
+                  <div className="form-row"><label>Số tập</label><input type="number" value={episodeNumber} onChange={e => setEpisodeNumber(e.target.value)} min={1} /></div>
+                  <div className="form-row"><label>Tiêu đề tập</label><input value={episodeTitle} onChange={e => setEpisodeTitle(e.target.value)} /></div>
+                  <div className="form-row"><label>Embed URL</label><input value={episodeEmbed} onChange={e => setEpisodeEmbed(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" /></div>
                   <div className="form-actions"><button className="btn" type="submit">Thêm tập</button></div>
                 </form>
               </div>
@@ -349,18 +350,18 @@ export default function Admin() {
                       <div key={ep.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                         {editEpisodeId === ep.id ? (
                           <div style={{ flex: 1, display: 'flex', gap: 8 }}>
-                            <input style={{ width: 80 }} value={editEpisodeData.number || ''} onChange={e=> setEditEpisodeData(prev=> ({...prev, number: e.target.value}))} />
-                            <input style={{ flex: 1 }} value={editEpisodeData.title || ''} onChange={e=> setEditEpisodeData(prev=> ({...prev, title: e.target.value}))} />
-                            <input style={{ flex: 1 }} value={editEpisodeData.embed_url || ''} onChange={e=> setEditEpisodeData(prev=> ({...prev, embed_url: e.target.value}))} />
-                            <button className="btn" onClick={async ()=> {
+                            <input style={{ width: 80 }} value={editEpisodeData.number || ''} onChange={e => setEditEpisodeData(prev => ({ ...prev, number: e.target.value }))} />
+                            <input style={{ flex: 1 }} value={editEpisodeData.title || ''} onChange={e => setEditEpisodeData(prev => ({ ...prev, title: e.target.value }))} />
+                            <input style={{ flex: 1 }} value={editEpisodeData.embed_url || ''} onChange={e => setEditEpisodeData(prev => ({ ...prev, embed_url: e.target.value }))} />
+                            <button className="btn" onClick={async () => {
                               try {
-                                const res = await authFetch(`/api/anime/${targetAnimeId}/episodes/${editEpisodeId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(editEpisodeData) });
+                                const res = await authFetch(`/api/anime/${targetAnimeId}/episodes/${editEpisodeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editEpisodeData) });
                                 const j = await res.json();
                                 if (!res.ok) throw new Error(j.error || 'Failed');
                                 setEditEpisodeId(null); setEditEpisodeData({}); fetchEpisodes(targetAnimeId);
                               } catch (err) { alert(err.message); }
                             }}>Lưu</button>
-                            <button className="btn secondary" onClick={()=> { setEditEpisodeId(null); setEditEpisodeData({}); }}>Hủy</button>
+                            <button className="btn secondary" onClick={() => { setEditEpisodeId(null); setEditEpisodeData({}); }}>Hủy</button>
                           </div>
                         ) : (
                           <>
@@ -368,8 +369,8 @@ export default function Admin() {
                               <strong>Tập {ep.number}</strong> — <span style={{ color: '#aaa' }}>{ep.title || 'Không tiêu đề'}</span>
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
-                              <button className="btn" onClick={()=> { setEditEpisodeId(ep.id); setEditEpisodeData({ number: ep.number, title: ep.title, embed_url: ep.embed_url }); }}>Sửa</button>
-                              <button className="btn secondary" onClick={async ()=> {
+                              <button className="btn" onClick={() => { setEditEpisodeId(ep.id); setEditEpisodeData({ number: ep.number, title: ep.title, embed_url: ep.embed_url }); }}>Sửa</button>
+                              <button className="btn secondary" onClick={async () => {
                                 if (!confirm('Xóa tập này?')) return;
                                 try {
                                   const res = await authFetch(`/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
@@ -388,15 +389,15 @@ export default function Admin() {
             </div>
           </div>
 
-          <div className="tab-panel" style={{ display: tab==='mangas' ? 'block' : 'none' }}>
+          <div className="tab-panel" style={{ display: tab === 'mangas' ? 'block' : 'none' }}>
             <MangaManagementPanel mangaList={mangaList} fetchMangaList={fetchMangaList} status={status} setStatus={setStatus} />
           </div>
 
-          <div className="tab-panel" style={{ display: tab==='animes' ? 'block' : 'none' }}>
+          <div className="tab-panel" style={{ display: tab === 'animes' ? 'block' : 'none' }}>
             <AnimeManagementPanel animeList={animeList} fetchAnimeList={fetchAnimeList} status={status} setStatus={setStatus} />
           </div>
-          
-          <div className="tab-panel" style={{ display: tab==='users' ? 'block' : 'none' }}>
+
+          <div className="tab-panel" style={{ display: tab === 'users' ? 'block' : 'none' }}>
             <h3>Quản lý users</h3>
             <UsersPanel />
           </div>
@@ -522,10 +523,10 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
       <h3>Quản trị Truyện (Manga)</h3>
       {status && <div className="notice" style={{ color: status.ok ? '#8ef' : '#f88', marginBottom: 12 }}>{status.msg}</div>}
       <div className="form-row" style={{ marginBottom: 12 }}>
-        <input 
-          type="text" 
-          placeholder="🔍 Tìm kiếm truyện..." 
-          value={searchTerm} 
+        <input
+          type="text"
+          placeholder="🔍 Tìm kiếm truyện..."
+          value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           style={{ padding: '8px 12px' }}
         />
@@ -540,16 +541,16 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
                 <form onSubmit={e => { e.preventDefault(); handleSaveWithCover(m.id); }}>
                   <div className="form-row" style={{ marginBottom: 8 }}>
                     <label style={{ fontSize: 12 }}>Tiêu đề</label>
-                    <input 
-                      value={editData.title || ''} 
+                    <input
+                      value={editData.title || ''}
                       onChange={e => setEditData({ ...editData, title: e.target.value })}
                       style={{ fontSize: 12 }}
                     />
                   </div>
                   <div className="form-row" style={{ marginBottom: 8 }}>
                     <label style={{ fontSize: 12 }}>Mô tả</label>
-                    <textarea 
-                      value={editData.description || ''} 
+                    <textarea
+                      value={editData.description || ''}
                       onChange={e => setEditData({ ...editData, description: e.target.value })}
                       style={{ fontSize: 12, minHeight: 60 }}
                     />
@@ -640,10 +641,10 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, status, setStatus }) 
       <h3>Quản trị Anime</h3>
       {status && <div className="notice" style={{ color: status.ok ? '#8ef' : '#f88', marginBottom: 12 }}>{status.msg}</div>}
       <div className="form-row" style={{ marginBottom: 12 }}>
-        <input 
-          type="text" 
-          placeholder="🔍 Tìm kiếm anime..." 
-          value={searchTerm} 
+        <input
+          type="text"
+          placeholder="🔍 Tìm kiếm anime..."
+          value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           style={{ padding: '8px 12px' }}
         />
@@ -658,16 +659,25 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, status, setStatus }) 
                 <form onSubmit={e => { e.preventDefault(); handleSaveWithCoverAnime(a.id); }}>
                   <div className="form-row" style={{ marginBottom: 8 }}>
                     <label style={{ fontSize: 12 }}>Tiêu đề</label>
-                    <input 
-                      value={editData.title || ''} 
+                    <input
+                      value={editData.title || ''}
                       onChange={e => setEditData({ ...editData, title: e.target.value })}
                       style={{ fontSize: 12 }}
                     />
                   </div>
                   <div className="form-row" style={{ marginBottom: 8 }}>
+                    <label style={{ fontSize: 12 }}>Mô tả</label>
+                    <textarea
+                      value={editData.description || ''}
+                      onChange={e => setEditData({ ...editData, description: e.target.value })}
+                      style={{ fontSize: 12, minHeight: 60 }}
+                      placeholder="Mô tả phim.."
+                    />
+                  </div>
+                  <div className="form-row" style={{ marginBottom: 8 }}>
                     <label style={{ fontSize: 12 }}>Embed URL</label>
-                    <input 
-                      value={editData.embed_url || ''} 
+                    <input
+                      value={editData.embed_url || ''}
                       onChange={e => setEditData({ ...editData, embed_url: e.target.value })}
                       style={{ fontSize: 12 }}
                       placeholder="https://www.youtube.com/embed/xxxx"
@@ -721,7 +731,7 @@ function UsersPanel() {
   async function fetchUsers() {
     setLoading(true);
     try {
-  const res = await authFetch(`/api/admin/users`);
+      const res = await authFetch(`/api/admin/users`);
       if (!res.ok) throw new Error('Không thể lấy users');
       // const data = await res.json();
       // console.log(API_BASE);
@@ -745,7 +755,7 @@ function UsersPanel() {
   async function changeRole(userId, role) {
     setStatus(null);
     try {
-      const res = await authFetch(`/api/admin/users/${userId}/role`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ role }) });
+      const res = await authFetch(`/api/admin/users/${userId}/role`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || 'Failed');
       setStatus({ ok: true, msg: `Role updated for ${j.username}` });
@@ -776,7 +786,7 @@ function UsersPanel() {
                 <td style={{ padding: 8 }}>
                   {currentUser && currentUser.id === u.id ? <em>(you)</em> : (
                     <>
-                      <button className={u.role==='admin' ? 'btn' : 'btn secondary'} onClick={() => changeRole(u.id, u.role==='admin' ? 'user' : 'admin')}>{u.role==='admin' ? 'Revoke admin' : 'Make admin'}</button>
+                      <button className={u.role === 'admin' ? 'btn' : 'btn secondary'} onClick={() => changeRole(u.id, u.role === 'admin' ? 'user' : 'admin')}>{u.role === 'admin' ? 'Revoke admin' : 'Make admin'}</button>
                     </>
                   )}
                 </td>
