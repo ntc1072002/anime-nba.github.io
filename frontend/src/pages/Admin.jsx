@@ -765,7 +765,16 @@ function UsersPanel() {
       setStatus({ ok: false, msg: err.message });
     }
   }
+  const formatDate = (date) => {
+    if (!date) return '-';
 
+    if (date?.toDate) {
+      return date.toDate().toLocaleDateString('vi-VN');
+    }
+
+    return new Date(date).toLocaleDateString('vi-VN');
+  };
+  const [updatingId, setUpdatingId] = useState(null);
   const currentUser = getUserFromToken();
 
   return (
@@ -778,15 +787,15 @@ function UsersPanel() {
           </thead>
           <tbody>
             {users.map(u => (
-              <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
                 <td style={{ padding: 8 }}>{u.id}</td>
                 <td style={{ padding: 8 }}>{u.username}</td>
                 <td style={{ padding: 8 }}>{u.role}</td>
-                <td style={{ padding: 8 }}>{typeof u.created_at === 'object' && u.created_at?.toDate ? new Date(u.created_at.toDate()).toLocaleDateString('vi-VN') : (u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : '-')}</td>
+                <td style={{ padding: 8 }}>{formatDate(u.created_at)}</td>
                 <td style={{ padding: 8 }}>
                   {currentUser && currentUser.id === u.id ? <em>(you)</em> : (
                     <>
-                      <button className={u.role === 'admin' ? 'btn' : 'btn secondary'} onClick={() => changeRole(u.id, u.role === 'admin' ? 'user' : 'admin')}>{u.role === 'admin' ? 'Revoke admin' : 'Make admin'}</button>
+                      <button className={u.role === 'admin' ? 'btn' : 'btn secondary'} disabled={updatingId === u.id} onClick={async () => { setUpdatingId(u.id); await changeRole(u.id, u.role === 'admin' ? 'user' : 'admin'); setUpdatingId(null); }}>{u.role === 'admin' ? 'Remove admin' : 'Make admin'}</button>
                     </>
                   )}
                 </td>
