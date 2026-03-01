@@ -804,8 +804,8 @@ function UsersPanel() {
           <tbody>
             {users.map(u => (
               <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
-                <td style={{ width: '28%' }}>{u.id.slice(0, 10)}...</td>
-                <td style={{ width: '36%' }}>{u.username.slice(0, 20)}...</td>
+                <td style={{ width: '32%' }}>{u.id.slice(0, 10)}...</td>
+                <td style={{ width: '40%' }}>{u.username.slice(0, 20)}...</td>
                 <td style={{ width: '12%', textAlign: 'center' }}>{u.role}</td>
                 <td style={{ width: '16%' }}>{formatDate(u.created_at)}</td>
                 <td style={{ width: '16%', textAlign: 'center' }}>
