@@ -799,13 +799,13 @@ function UsersPanel() {
       {loading ? <div className="notice">Đang tải danh sách users...</div> : (
         <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
           <thead>
-            <tr style={{ textAlign: 'left' }}><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
+            <tr style={{ textAlign: 'center' }}><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
           </thead>
           <tbody>
             {users.map(u => (
               <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
-                <td style={{ width: '28%' }}>{u.id.slice(0, 10)}...</td>
-                <td style={{ width: '28%' }}>{u.username}</td>
+                <td style={{ width: '20%' }}>{u.id.slice(0, 10)}...</td>
+                <td style={{ width: '36%' }}>{u.username.slice(0, 20)}...</td>
                 <td style={{ width: '12%' }}>{u.role}</td>
                 <td style={{ width: '16%' }}>{formatDate(u.created_at)}</td>
                 <td style={{ width: '16%' }}>
