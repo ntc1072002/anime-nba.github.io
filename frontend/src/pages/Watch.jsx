@@ -120,12 +120,12 @@ function AnimeCard({ anime }) {
                       transition: 'all 0.2s'
                     }}
                     onMouseEnter={e => {
-                      e.target.style.background = '#1a3a3a';
-                      e.target.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                      e.currentTarget.style.background = '#1a3a3a';
+                      e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                     }}
                     onMouseLeave={e => {
-                      e.target.style.background = '#0f0f1a';
-                      e.target.style.borderColor = 'rgba(136, 238, 255, 0.3)';
+                      e.currentTarget.style.background = '#0f0f1a';
+                      e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                     }}
                   >
                     Chi tiết
@@ -147,12 +147,12 @@ function AnimeCard({ anime }) {
                     cursor: 'pointer'
                   }}
                   onMouseEnter={e => {
-                    e.style.background = '#1a5a1a';
-                    e.style.borderColor = 'rgba(136, 238, 136, 0.5)';
+                    e.currentTarget.style.background = '#1a3a3a';
+                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                   }}
                   onMouseLeave={e => {
-                    e.style.background = '#0f3f0f';
-                    e.style.borderColor = 'rgba(136, 238, 136, 0.3)';
+                    e.currentTarget.style.background = '#0f0f1a';
+                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                   }}
                 >
                   ▶ Xem Phim
@@ -192,12 +192,12 @@ function AnimeCard({ anime }) {
                   cursor: 'pointer'
                 }}
                 onMouseEnter={e => {
-                  e.target.style.background = '#1a3a3a';
-                  e.target.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                  e.currentTarget.style.background = '#1a3a3a';
+                  e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                 }}
                 onMouseLeave={e => {
-                  e.target.style.background = '#0f0f1a';
-                  e.target.style.borderColor = 'rgba(136, 238, 255, 0.2)';
+                  e.currentTarget.style.background = '#0f0f1a';
+                  e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                 }}
               >
                 Tập {ep.number}
@@ -276,12 +276,12 @@ function AnimeCard({ anime }) {
                     fontSize: 12
                   }}
                   onMouseEnter={e => {
-                    e.style.background = '#1a5a1a';
-                    e.style.borderColor = 'rgba(136, 238, 136, 0.5)';
+                    e.currentTarget.style.background = '#1a3a3a';
+                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                   }}
                   onMouseLeave={e => {
-                    e.style.background = '#0f3f0f';
-                    e.style.borderColor = 'rgba(136, 238, 136, 0.3)';
+                    e.currentTarget.style.background = '#0f0f1a';
+                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                   }}
                 >
                   ▶ Xem phim
