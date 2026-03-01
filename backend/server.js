@@ -829,9 +829,7 @@ app.get('/api/admin/users', authenticateJWT, requireRole('admin'), async (_, res
         username: data.username || data.email || d.id,
         email: data.email,
         role: data.role || 'user',
-        created_at: data.created_at
-          ? data.created_at.toDate().toISOString()
-          : null
+        created_at: data.created_at.toDate().toISOString()
       };
     });
     res.json(users);
