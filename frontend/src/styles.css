@@ -124,11 +124,11 @@ body {
 
 
 /* Tabs for admin */
-/* .tabs { display:block }
+.tabs { display:block }
 .tab-buttons { display:flex; gap:8px; margin-bottom:12px }
 .tab-button { padding:8px 12px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer }
 .tab-button.active { background: linear-gradient(90deg, rgba(124,58,237,0.14), transparent); color: white; border-color: rgba(124,58,237,0.25) }
-.tab-panel { display:block } */
+.tab-panel { display:block }
 .users-table {
   width: 100%;
   border-collapse: collapse;
