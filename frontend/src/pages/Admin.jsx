@@ -774,11 +774,21 @@ function UsersPanel() {
   const formatDate = (date) => {
     if (!date) return '-';
 
+    // Firestore Timestamp (client SDK)
     if (date?.toDate) {
       return date.toDate().toLocaleDateString('vi-VN');
     }
 
-    return new Date(date).toLocaleDateString('vi-VN');
+    // Firestore Timestamp (server JSON)
+    if (date?.seconds) {
+      return new Date(date.seconds * 1000)
+        .toLocaleDateString('vi-VN');
+    }
+
+    // ISO string / number
+    const d = new Date(date);
+
+    return isNaN(d) ? '-' : d.toLocaleDateString('vi-VN');
   };
   const [updatingId, setUpdatingId] = useState(null);
   const currentUser = getUserFromToken();
@@ -787,18 +797,18 @@ function UsersPanel() {
     <div>
       {status && <div className="notice" style={{ color: status.ok ? '#8ef' : '#f88' }}>{status.msg}</div>}
       {loading ? <div className="notice">Đang tải danh sách users...</div> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
           <thead>
             <tr style={{ textAlign: 'left' }}><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
           </thead>
           <tbody>
             {users.map(u => (
               <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
-                <td style={{ margin: '8px 0 0 0' }}>{u.id}</td>
-                <td style={{ margin: '8px 0 0 0' }}>{u.username}</td>
-                <td style={{ margin: '8px 0 0 0' }}>{u.role}</td>
-                <td style={{ margin: '8px 0 0 0' }}>{formatDate(u.created_at)}</td>
-                <td style={{ margin: '8px 0 0 0' }}>
+                <td style={{ width: '28%' }}>{u.id.slice(0, 10)}...</td>
+                <td style={{ width: '28%' }}>{u.username}</td>
+                <td style={{ width: '12%' }}>{u.role}</td>
+                <td style={{ width: '16%' }}>{formatDate(u.created_at)}</td>
+                <td style={{ width: '16%' }}>
                   {currentUser && currentUser.id === u.id ? <em>(you)</em> : (
                     <>
                       <button className={u.role === 'admin' ? 'btn' : 'btn secondary'} disabled={updatingId === u.id} onClick={async () => { setUpdatingId(u.id); await changeRole(u.id, u.role === 'admin' ? 'user' : 'admin'); setUpdatingId(null); }}>{u.role === 'admin' ? 'Remove admin' : 'Make admin'}</button>
