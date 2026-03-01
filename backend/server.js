@@ -185,35 +185,35 @@ app.delete("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, 
 
 /* ================== MIDDLEWARE ================== */
 function authenticateJWT(req, res, next) {
-    const auth = req.headers.authorization;
-    if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'unauthorized' });
-    try {
-        req.user = jwt.verify(auth.slice(7), JWT_SECRET);
-        next();
-    } catch {
-        res.status(401).json({ error: 'invalid token' });
-    }
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'unauthorized' });
+  try {
+    req.user = jwt.verify(auth.slice(7), JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'invalid token' });
+  }
 }
 
 
 async function verifyFirebaseToken(req, res, next) {
-    const auth = req.headers.authorization;
-    if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'unauthorized' });
-    try {
-        req.user = await admin.auth().verifyIdToken(auth.slice(7));
-        next();
-    } catch {
-        res.status(401).json({ error: 'invalid firebase token' });
-    }
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'unauthorized' });
+  try {
+    req.user = await admin.auth().verifyIdToken(auth.slice(7));
+    next();
+  } catch {
+    res.status(401).json({ error: 'invalid firebase token' });
+  }
 }
 
 
 function requireRole(role) {
-    return (req, res, next) => {
-        if (!req.user || req.user.role !== role)
-            return res.status(403).json({ error: 'forbidden' });
-        next();
-    };
+  return (req, res, next) => {
+    if (!req.user || req.user.role !== role)
+      return res.status(403).json({ error: 'forbidden' });
+    next();
+  };
 }
 
 // // ===== REGISTER USER =====
@@ -342,71 +342,71 @@ app.post('/auth/firebase', verifyFirebaseToken, async (req, res) => {
 
 /* ================== MANGA ================== */
 app.get('/api/manga', async (_, res) => {
-    const snap = await firestore.collection('manga').get();
-    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  const snap = await firestore.collection('manga').get();
+  res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 });
 
 
 app.post('/api/manga', authenticateJWT, requireRole('admin'), async (req, res) => {
-    const ref = await firestore.collection('manga').add({
-        title: req.body.title,
-        description: req.body.description || null,
-        created_at: new Date()
-    });
-    res.status(201).json({ id: ref.id });
+  const ref = await firestore.collection('manga').add({
+    title: req.body.title,
+    description: req.body.description || null,
+    created_at: new Date()
+  });
+  res.status(201).json({ id: ref.id });
 });
 
 // UPDATE manga
 app.put('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, res) => {
-    try {
-        const { title, description } = req.body;
-        await firestore.collection('manga').doc(req.params.id).update({
-            title: title || undefined,
-            description: description || undefined,
-            updated_at: new Date()
-        });
-        const doc = await firestore.collection('manga').doc(req.params.id).get();
-        res.json({ id: req.params.id, ...doc.data() });
-    } catch (err) {
-        console.error('PUT /api/manga/:id error', err);
-        res.status(500).json({ error: 'internal' });
-    }
+  try {
+    const { title, description } = req.body;
+    await firestore.collection('manga').doc(req.params.id).update({
+      title: title || undefined,
+      description: description || undefined,
+      updated_at: new Date()
+    });
+    const doc = await firestore.collection('manga').doc(req.params.id).get();
+    res.json({ id: req.params.id, ...doc.data() });
+  } catch (err) {
+    console.error('PUT /api/manga/:id error', err);
+    res.status(500).json({ error: 'internal' });
+  }
 });
 
 // DELETE manga
 app.delete('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, res) => {
-    try {
-        // Delete all chapters and images first
-        const chaptersSnap = await firestore.collection('manga').doc(req.params.id).collection('chapters').get();
-        for (const chapDoc of chaptersSnap.docs) {
-            await chapDoc.ref.delete();
-        }
-        // Delete manga
-        await firestore.collection('manga').doc(req.params.id).delete();
-        res.json({ success: true });
-    } catch (err) {
-        console.error('DELETE /api/manga/:id error', err);
-        res.status(500).json({ error: 'internal' });
+  try {
+    // Delete all chapters and images first
+    const chaptersSnap = await firestore.collection('manga').doc(req.params.id).collection('chapters').get();
+    for (const chapDoc of chaptersSnap.docs) {
+      await chapDoc.ref.delete();
     }
+    // Delete manga
+    await firestore.collection('manga').doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/manga/:id error', err);
+    res.status(500).json({ error: 'internal' });
+  }
 });
 
 /* ================== CHAPTERS ================== */
 app.get('/api/manga/:id/chapters', async (req, res) => {
-    const snap = await firestore
-        .collection('manga')
-        .doc(req.params.id)
-        .collection('chapters')
-        .orderBy('number')
-        .get();
+  const snap = await firestore
+    .collection('manga')
+    .doc(req.params.id)
+    .collection('chapters')
+    .orderBy('number')
+    .get();
 
 
-    res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 });
 
 
 app.post('/api/manga/:id/chapters', authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
-    console.log('POST /api/manga/:id/chapters body:', JSON.stringify(req.body).slice(0,2000));
+    console.log('POST /api/manga/:id/chapters body:', JSON.stringify(req.body).slice(0, 2000));
     // accept images array from client when creating a chapter
     let incoming = [];
     if (Array.isArray(req.body.images) && req.body.images.length) {
@@ -658,89 +658,89 @@ app.post('/api/me/like', authenticateJWT, async (req, res) => {
 
 /* ================== UPLOAD ẢNH ================== */
 app.post(
-    '/api/manga/:id/chapters/:cid/upload',
-    authenticateJWT,
-    requireRole('admin'),
-    upload.array('images'),
-    async (req, res) => {
-        const urls = [];
-        for (let i = 0; i < req.files.length; i++) {
-            const file = bucket.file(`manga/${req.params.id}/chapters/${req.params.cid}/${i + 1}.jpg`);
-            await file.save(req.files[i].buffer, { contentType: req.files[i].mimetype });
-            await file.makePublic();
-            urls.push({ order: i + 1, url: file.publicUrl() });
-        }
-
-
-        await firestore
-            .collection('manga')
-            .doc(req.params.id)
-            .collection('chapters')
-            .doc(req.params.cid)
-            .update({ images: urls });
-
-
-        res.json({ images: urls });
+  '/api/manga/:id/chapters/:cid/upload',
+  authenticateJWT,
+  requireRole('admin'),
+  upload.array('images'),
+  async (req, res) => {
+    const urls = [];
+    for (let i = 0; i < req.files.length; i++) {
+      const file = bucket.file(`manga/${req.params.id}/chapters/${req.params.cid}/${i + 1}.jpg`);
+      await file.save(req.files[i].buffer, { contentType: req.files[i].mimetype });
+      await file.makePublic();
+      urls.push({ order: i + 1, url: file.publicUrl() });
     }
+
+
+    await firestore
+      .collection('manga')
+      .doc(req.params.id)
+      .collection('chapters')
+      .doc(req.params.cid)
+      .update({ images: urls });
+
+
+    res.json({ images: urls });
+  }
 );
 
-  import FormData from "form-data";
-  import axios from "axios";
-  // Upload cover image for manga to Imgbb
-  app.post('/api/manga/:id/cover', authenticateJWT, requireRole('admin'), upload.single('image'), async (req, res) => {
-    try {
-      if (!req.file) return res.status(400).json({ error: 'image required' });
-      if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
+import FormData from "form-data";
+import axios from "axios";
+// Upload cover image for manga to Imgbb
+app.post('/api/manga/:id/cover', authenticateJWT, requireRole('admin'), upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'image required' });
+    if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
 
-      // const FormData = require('form-data');
-      // const axios = require('axios');
-      
-      const form = new FormData();
-      form.append('image', req.file.buffer, `manga-${req.params.id}-cover.jpg`);
-      form.append('key', process.env.IMGBB_API_KEY);
-      
-      const response = await axios.post('https://api.imgbb.com/1/upload', form, {
-        headers: form.getHeaders()
-      });
-      
-      if (!response.data.success) throw new Error('Imgbb upload failed');
-      
-      const imageUrl = response.data.data.url;
-      await firestore.collection('manga').doc(req.params.id).update({ cover_url: imageUrl });
-      res.json({ cover_url: imageUrl });
-    } catch (err) {
-      console.error('POST /api/manga/:id/cover error', err);
-      res.status(500).json({ error: 'internal' });
-    }
-  });
+    // const FormData = require('form-data');
+    // const axios = require('axios');
 
-  // Upload cover image for anime to Imgbb
-  app.post('/api/anime/:id/cover', authenticateJWT, requireRole('admin'), upload.single('image'), async (req, res) => {
-    try {
-      if (!req.file) return res.status(400).json({ error: 'image required' });
-      if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
+    const form = new FormData();
+    form.append('image', req.file.buffer, `manga-${req.params.id}-cover.jpg`);
+    form.append('key', process.env.IMGBB_API_KEY);
 
-      // const FormData = require('form-data');
-      // const axios = require('axios');
-      
-      const form = new FormData();
-      form.append('image', req.file.buffer, `anime-${req.params.id}-cover.jpg`);
-      form.append('key', process.env.IMGBB_API_KEY);
-      
-      const response = await axios.post('https://api.imgbb.com/1/upload', form, {
-        headers: form.getHeaders()
-      });
-      
-      if (!response.data.success) throw new Error('Imgbb upload failed');
-      
-      const imageUrl = response.data.data.url;
-      await firestore.collection('anime').doc(req.params.id).update({ cover_url: imageUrl });
-      res.json({ cover_url: imageUrl });
-    } catch (err) {
-      console.error('POST /api/anime/:id/cover error', err);
-      res.status(500).json({ error: 'internal' });
-    }
-  });
+    const response = await axios.post('https://api.imgbb.com/1/upload', form, {
+      headers: form.getHeaders()
+    });
+
+    if (!response.data.success) throw new Error('Imgbb upload failed');
+
+    const imageUrl = response.data.data.url;
+    await firestore.collection('manga').doc(req.params.id).update({ cover_url: imageUrl });
+    res.json({ cover_url: imageUrl });
+  } catch (err) {
+    console.error('POST /api/manga/:id/cover error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+// Upload cover image for anime to Imgbb
+app.post('/api/anime/:id/cover', authenticateJWT, requireRole('admin'), upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'image required' });
+    if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
+
+    // const FormData = require('form-data');
+    // const axios = require('axios');
+
+    const form = new FormData();
+    form.append('image', req.file.buffer, `anime-${req.params.id}-cover.jpg`);
+    form.append('key', process.env.IMGBB_API_KEY);
+
+    const response = await axios.post('https://api.imgbb.com/1/upload', form, {
+      headers: form.getHeaders()
+    });
+
+    if (!response.data.success) throw new Error('Imgbb upload failed');
+
+    const imageUrl = response.data.data.url;
+    await firestore.collection('anime').doc(req.params.id).update({ cover_url: imageUrl });
+    res.json({ cover_url: imageUrl });
+  } catch (err) {
+    console.error('POST /api/anime/:id/cover error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
 
 // CREATE episode (already used by admin form but ensure exists)
 app.post('/api/anime/:id/episodes', authenticateJWT, requireRole('admin'), async (req, res) => {
@@ -806,16 +806,16 @@ app.delete('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('admin')
   }
 });
 
-  /*
-    Ghi chú lưu trữ ảnh bìa:
-    - Ảnh bìa được lưu vào Firebase Storage (bucket được cấu hình trong admin.initializeApp).
-    - File được public và URL công khai lưu vào trường `cover_url` trong document Firestore tương ứng.
+/*
+  Ghi chú lưu trữ ảnh bìa:
+  - Ảnh bìa được lưu vào Firebase Storage (bucket được cấu hình trong admin.initializeApp).
+  - File được public và URL công khai lưu vào trường `cover_url` trong document Firestore tương ứng.
 
-    Về yêu cầu lưu vào Google Drive:
-    - Về kỹ thuật có thể tải file lên Google Drive bằng API, nhưng cần OAuth 2.0 (user consent) hoặc cấu hình service account với quyền truy cập thư mục cụ thể.
-    - Lưu trực tiếp lên Drive làm nơi lưu tập trung có thể phức tạp hơn (phải quản lý chia sẻ/permission, quota, refresh tokens). Thay vào đó khuyến nghị sử dụng Firebase Storage / Google Cloud Storage (đã tích hợp sẵn với Firebase Admin) vì dễ quản lý, tối ưu cho static assets và tương thích với ứng dụng hiện tại.
-    - Nếu bạn muốn tôi triển khai lưu thêm lên Google Drive, tôi có thể thêm endpoint upload Drive (yêu cầu bạn cung cấp credentials và quyết định sử dụng service account hay OAuth flow).
-  */
+  Về yêu cầu lưu vào Google Drive:
+  - Về kỹ thuật có thể tải file lên Google Drive bằng API, nhưng cần OAuth 2.0 (user consent) hoặc cấu hình service account với quyền truy cập thư mục cụ thể.
+  - Lưu trực tiếp lên Drive làm nơi lưu tập trung có thể phức tạp hơn (phải quản lý chia sẻ/permission, quota, refresh tokens). Thay vào đó khuyến nghị sử dụng Firebase Storage / Google Cloud Storage (đã tích hợp sẵn với Firebase Admin) vì dễ quản lý, tối ưu cho static assets và tương thích với ứng dụng hiện tại.
+  - Nếu bạn muốn tôi triển khai lưu thêm lên Google Drive, tôi có thể thêm endpoint upload Drive (yêu cầu bạn cung cấp credentials và quyết định sử dụng service account hay OAuth flow).
+*/
 
 /* ================== ADMIN - USERS ================== */
 // Get all users (admin only)
@@ -830,6 +830,8 @@ app.get('/api/admin/users', authenticateJWT, requireRole('admin'), async (_, res
         email: data.email,
         role: data.role || 'user',
         created_at: data.created_at
+          ? data.created_at.toDate().toISOString()
+          : null
       };
     });
     res.json(users);

@@ -774,20 +774,7 @@ function UsersPanel() {
   const formatDate = (date) => {
     if (!date) return '-';
 
-    // Firestore Timestamp (client SDK)
-    if (date?.toDate) {
-      return date.toDate().toLocaleDateString('vi-VN');
-    }
-
-    // Firestore Timestamp (server JSON)
-    if (date?.seconds) {
-      return new Date(date.seconds * 1000)
-        .toLocaleDateString('vi-VN');
-    }
-
-    // ISO string / number
     const d = new Date(date);
-
     return isNaN(d) ? '-' : d.toLocaleDateString('vi-VN');
   };
   const [updatingId, setUpdatingId] = useState(null);
@@ -804,11 +791,11 @@ function UsersPanel() {
           <tbody>
             {users.map(u => (
               <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
-                <td style={{ width: '32%' }}>{u.id.slice(0, 10)}...</td>
-                <td style={{ width: '40%' }}>{u.username.slice(0, 20)}...</td>
-                <td style={{ width: '12%', textAlign: 'center' }}>{u.role}</td>
-                <td style={{ width: '16%' }}>{formatDate(u.created_at)}</td>
-                <td style={{ width: '16%', textAlign: 'center' }}>
+                <td style={{ width: '32%', padding: '14px 12px', verticalAlign: 'middle' }}>{u.id.slice(0, 10)}...</td>
+                <td style={{ width: '40%', padding: '14px 12px', verticalAlign: 'middle' }}>{u.username.slice(0, 20)}...</td>
+                <td style={{ width: '12%', textAlign: 'center', padding: '14px 12px', verticalAlign: 'middle' }}>{u.role}</td>
+                <td style={{ width: '16%', padding: '14px 12px', verticalAlign: 'middle' }}>{formatDate(u.created_at)}</td>
+                <td style={{ width: '16%', textAlign: 'center', padding: '14px 12px', verticalAlign: 'middle' }}>
                   {currentUser && currentUser.id === u.id ? <em>My Account</em> : (
                     <>
                       <button className={u.role === 'admin' ? 'btn' : 'btn secondary'} disabled={updatingId === u.id} onClick={async () => { setUpdatingId(u.id); await changeRole(u.id, u.role === 'admin' ? 'user' : 'admin'); setUpdatingId(null); }}>{u.role === 'admin' ? 'Remove admin' : 'Make admin'}</button>
