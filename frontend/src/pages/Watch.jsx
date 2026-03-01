@@ -5,7 +5,7 @@ export default function Watch({ data = [], loading = false }) {
   return (
     <div className="col right">
       <h2 className="page-title">🎬 Xem anime</h2>
-      
+
       {loading ? (
         // Loading skeleton
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -47,8 +47,8 @@ function AnimeCard({ anime }) {
 
   // Truncate description  
   const maxDescLength = 150;
-  const isTruncated = anime.embed_url && anime.embed_url.length > maxDescLength;
-  const truncatedDesc = isTruncated ? anime.embed_url.substring(0, maxDescLength) + '...' : anime.embed_url || 'Chưa có video';
+  const isTruncated = anime.description && anime.description.length > maxDescLength;
+  const truncatedDesc = isTruncated ? anime.description.substring(0, maxDescLength) + '...' : anime.description || 'Chưa có mô tả';
 
   return (
     <>
@@ -74,7 +74,7 @@ function AnimeCard({ anime }) {
               <img src={anime.cover_url} alt={anime.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: 12, textAlign: 'center', padding: 8 }}>
-                📷<br/>Chưa có ảnh
+                📷<br />Chưa có ảnh
               </div>
             )}
           </div>
@@ -86,7 +86,17 @@ function AnimeCard({ anime }) {
                 {anime.title}
               </a>
             </h3>
-            <div style={{ 
+            <p style={{
+              margin: '0 0 8px 0',
+              color: '#aaa',
+              fontSize: 13,
+              lineHeight: 1.4,
+              flex: 1,
+              overflow: 'hidden'
+            }}>
+              {truncatedDesc}
+            </p>
+            <div style={{
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
@@ -97,11 +107,10 @@ function AnimeCard({ anime }) {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {isTruncated && (
-                  <button 
+                  <button
                     onClick={() => setShowModal(true)}
                     style={{
-                      flex: 1,
-                      padding: '8px 12px',
+                      padding: '4px 12px',
                       background: '#0f0f1a',
                       color: '#8ef',
                       border: '1px solid rgba(136, 238, 255, 0.3)',
@@ -152,6 +161,7 @@ function AnimeCard({ anime }) {
             </div>
           </div>
         </div>
+
 
         {/* Episodes List */}
         {loadingEpisodes ? (
@@ -238,13 +248,16 @@ function AnimeCard({ anime }) {
             border: '1px solid rgba(255,255,255,0.1)'
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-              <img 
-                src={anime.cover_url} 
+              <img
+                src={anime.cover_url}
                 alt={anime.title}
                 style={{ width: 120, height: 160, borderRadius: 6, objectFit: 'cover' }}
               />
               <div style={{ flex: 1 }}>
                 <h2 style={{ margin: '0 0 8px 0', color: '#fff' }}>{anime.title}</h2>
+                <p style={{ margin: 0, color: '#aaa', fontSize: 13, lineHeight: 1.6 }}>
+                  {anime.description || 'Không có mô tả'}
+                </p>
                 <p style={{ margin: 0, color: '#aaa', fontSize: 13, lineHeight: 1.6 }}>
                   🎬 {episodes.length} tập
                 </p>
@@ -275,7 +288,7 @@ function AnimeCard({ anime }) {
                 </a>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => setShowModal(false)}
               style={{
                 width: '100%',
