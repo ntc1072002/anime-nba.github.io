@@ -794,7 +794,7 @@ function UsersPanel() {
                 <td style={{ width: '32%', padding: '14px 12px', verticalAlign: 'middle' }}>{u.id.slice(0, 15)}...</td>
                 <td style={{ width: '40%', padding: '14px 12px', verticalAlign: 'middle' }}>{u.username.slice(0, 20)}...</td>
                 <td style={{ width: '12%', textAlign: 'center', padding: '14px 12px', verticalAlign: 'middle' }}>{u.role}</td>
-                <td style={{ width: '16%', padding: '14px 12px', verticalAlign: 'middle' }}>{formatDate(u.created_at)}</td>
+                <td style={{ width: '16%', textAlign: 'center', padding: '14px 12px', verticalAlign: 'middle' }}>{formatDate(u.created_at)}</td>
                 <td style={{ width: '16%', textAlign: 'center', padding: '14px 12px', verticalAlign: 'middle' }}>
                   {currentUser && currentUser.id === u.id ? <em>My Account</em> : (
                     <>
