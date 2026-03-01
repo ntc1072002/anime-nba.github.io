@@ -794,11 +794,11 @@ function UsersPanel() {
           <tbody>
             {users.map(u => (
               <tr key={u.id} style={{ borderTop: '1px solid rgba(255,255,255,0.04)', cursor: 'default' }}>
-                <td style={{ padding: 0 }}>{u.id}</td>
-                <td style={{ padding: 0 }}>{u.username}</td>
-                <td style={{ padding: 0 }}>{u.role}</td>
-                <td style={{ padding: 0 }}>{formatDate(u.created_at)}</td>
-                <td style={{ padding: 0 }}>
+                <td style={{ margin: '8px 0 0 0' }}>{u.id}</td>
+                <td style={{ margin: '8px 0 0 0' }}>{u.username}</td>
+                <td style={{ margin: '8px 0 0 0' }}>{u.role}</td>
+                <td style={{ margin: '8px 0 0 0' }}>{formatDate(u.created_at)}</td>
+                <td style={{ margin: '8px 0 0 0' }}>
                   {currentUser && currentUser.id === u.id ? <em>(you)</em> : (
                     <>
                       <button className={u.role === 'admin' ? 'btn' : 'btn secondary'} disabled={updatingId === u.id} onClick={async () => { setUpdatingId(u.id); await changeRole(u.id, u.role === 'admin' ? 'user' : 'admin'); setUpdatingId(null); }}>{u.role === 'admin' ? 'Remove admin' : 'Make admin'}</button>
