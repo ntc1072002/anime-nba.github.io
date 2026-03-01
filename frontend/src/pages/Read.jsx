@@ -5,7 +5,7 @@ export default function Read({ data = [], loading = false }) {
   return (
     <div className="col left">
       <h2 className="page-title">📖 Đọc truyện</h2>
-      
+
       {loading ? (
         // Loading skeleton
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -74,7 +74,7 @@ function MangaCard({ manga }) {
               <img src={manga.cover_url} alt={manga.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: 12, textAlign: 'center', padding: 8 }}>
-                📷<br/>Chưa có ảnh
+                📷<br />Chưa có ảnh
               </div>
             )}
           </div>
@@ -86,10 +86,10 @@ function MangaCard({ manga }) {
                 {manga.title}
               </a>
             </h3>
-            <p style={{ 
-              margin: '0 0 8px 0', 
-              color: '#aaa', 
-              fontSize: 13, 
+            <p style={{
+              margin: '0 0 8px 0',
+              color: '#aaa',
+              fontSize: 13,
               lineHeight: 1.4,
               flex: 1,
               overflow: 'hidden'
@@ -99,7 +99,7 @@ function MangaCard({ manga }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 12, color: '#888' }}>📚 {chapters.length} chương</span>
               {isTruncated && (
-                <button 
+                <button
                   onClick={() => setShowModal(true)}
                   style={{
                     padding: '4px 12px',
@@ -112,12 +112,12 @@ function MangaCard({ manga }) {
                     transition: 'all 0.2s'
                   }}
                   onMouseEnter={e => {
-                    e.target.style.background = '#1a3a3a';
-                    e.target.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                    e.currentTarget.style.background = '#1a3a3a';
+                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                   }}
                   onMouseLeave={e => {
-                    e.target.style.background = '#0f0f1a';
-                    e.target.style.borderColor = 'rgba(136, 238, 255, 0.3)';
+                    e.currentTarget.style.background = '#0f0f1a';
+                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                   }}
                 >
                   Chi tiết
@@ -154,12 +154,12 @@ function MangaCard({ manga }) {
                   cursor: 'pointer'
                 }}
                 onMouseEnter={e => {
-                  e.target.style.background = '#1a3a3a';
-                  e.target.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                  e.currentTarget.style.background = '#1a3a3a';
+                  e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                 }}
                 onMouseLeave={e => {
-                  e.target.style.background = '#0f0f1a';
-                  e.target.style.borderColor = 'rgba(136, 238, 255, 0.2)';
+                  e.currentTarget.style.background = '#0f0f1a';
+                  e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                 }}
               >
                 Chap {ep.number}
@@ -210,8 +210,8 @@ function MangaCard({ manga }) {
             border: '1px solid rgba(255,255,255,0.1)'
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
-              <img 
-                src={manga.cover_url} 
+              <img
+                src={manga.cover_url}
                 alt={manga.title}
                 style={{ width: 120, height: 160, borderRadius: 6, objectFit: 'cover' }}
               />
@@ -225,7 +225,7 @@ function MangaCard({ manga }) {
                 </div>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => setShowModal(false)}
               style={{
                 width: '100%',
