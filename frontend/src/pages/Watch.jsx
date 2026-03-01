@@ -120,12 +120,19 @@ function AnimeCard({ anime }) {
                       transition: 'all 0.2s'
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.background = '#1a3a3a';
-                      e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                      const el = e.currentTarget;   // 👈 cache element
+                      if (!el) return;
+
+                      el.style.background = '#1a3a3a';
+                      el.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                     }}
+
                     onMouseLeave={e => {
-                      e.currentTarget.style.background = '#0f0f1a';
-                      e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
+                      const el = e.currentTarget;
+                      if (!el) return;
+
+                      el.style.background = '#0f0f1a';
+                      el.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                     }}
                   >
                     Chi tiết
@@ -147,12 +154,19 @@ function AnimeCard({ anime }) {
                     cursor: 'pointer'
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = '#1a3a3a';
-                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                    const el = e.currentTarget;   // 👈 cache element
+                    if (!el) return;
+
+                    el.style.background = '#1a3a3a';
+                    el.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                   }}
+
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = '#0f0f1a';
-                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
+                    const el = e.currentTarget;
+                    if (!el) return;
+
+                    el.style.background = '#0f0f1a';
+                    el.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                   }}
                 >
                   ▶ Xem Phim
@@ -192,12 +206,19 @@ function AnimeCard({ anime }) {
                   cursor: 'pointer'
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = '#1a3a3a';
-                  e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                  const el = e.currentTarget;   // 👈 cache element
+                  if (!el) return;
+
+                  el.style.background = '#1a3a3a';
+                  el.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                 }}
+
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = '#0f0f1a';
-                  e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
+                  const el = e.currentTarget;
+                  if (!el) return;
+
+                  el.style.background = '#0f0f1a';
+                  el.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                 }}
               >
                 Tập {ep.number}
@@ -276,12 +297,19 @@ function AnimeCard({ anime }) {
                     fontSize: 12
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = '#1a3a3a';
-                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.5)';
+                    const el = e.currentTarget;   // 👈 cache element
+                    if (!el) return;
+
+                    el.style.background = '#1a3a3a';
+                    el.style.borderColor = 'rgba(136, 238, 255, 0.5)';
                   }}
+
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = '#0f0f1a';
-                    e.currentTarget.style.borderColor = 'rgba(136, 238, 255, 0.3)';
+                    const el = e.currentTarget;
+                    if (!el) return;
+
+                    el.style.background = '#0f0f1a';
+                    el.style.borderColor = 'rgba(136, 238, 255, 0.3)';
                   }}
                 >
                   ▶ Xem phim
