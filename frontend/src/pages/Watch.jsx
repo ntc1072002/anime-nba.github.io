@@ -190,13 +190,12 @@ function AnimeCard({ anime }) {
                   e.target.style.borderColor = 'rgba(136, 238, 255, 0.2)';
                 }}
               >
-                Tập zzz {ep.number}
+                Tập {ep.number}
               </a>
             ))}
             {episodes.length > 6 && (
               <a
-                href={`#/watch/${id}/episode/${ep.id}`}
-                
+                href={`#/watch/${anime.id}`}
                 style={{
                   padding: '6px 10px',
                   background: '#0f0f1a',

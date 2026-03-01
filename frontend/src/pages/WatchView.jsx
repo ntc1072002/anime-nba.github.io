@@ -10,16 +10,18 @@ export default function WatchView({ id }) {
 
   useEffect(() => {
     let mounted = true;
-  fetch(`${API_BASE}/api/anime/${id}`)
+    fetch(`${API_BASE}/api/anime/${id}`)
       .then(r => r.json())
       .then(data => { if (mounted) setItem(data); })
       .catch(err => console.error(err))
       .finally(() => { if (mounted) setLoading(false); });
-  fetch(`${API_BASE}/api/anime/${id}/episodes`).then(r=>r.json()).then(d=>{ if (mounted) {
-      setEpisodes(d||[]);
-      // default to first episode if present
-      if ((d||[]).length && !currentEpisode) setCurrentEpisode((d||[])[0]);
-    }}).catch(()=>{});
+    fetch(`${API_BASE}/api/anime/${id}/episodes`).then(r => r.json()).then(d => {
+      if (mounted) {
+        setEpisodes(d || []);
+        // default to first episode if present
+        if ((d || []).length && !currentEpisode) setCurrentEpisode((d || [])[0]);
+      }
+    }).catch(() => { });
     return () => (mounted = false);
   }, [id]);
 
@@ -28,20 +30,20 @@ export default function WatchView({ id }) {
     if (!url) return null;
     try {
       const urlStr = String(url).trim();
-      
+
       // YouTube
       const ytMatch = urlStr.match(/(?:youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]+)/);
       if (ytMatch) return null; // YouTube requires iframe or API (can't embed direct video)
-      
+
       // Vimeo
       const vmMatch = urlStr.match(/vimeo\.com\/(?:video\/)?(\d+)/);
       if (vmMatch) return null; // Vimeo requires iframe or API
-      
+
       // Direct MP4/video file
       if (/\.(mp4|webm|mkv|avi|mov|m3u8)$/i.test(urlStr)) {
         return urlStr;
       }
-      
+
       // check if url is already an iframe src (not a direct video), fallback to null
       return null;
     } catch (e) {
@@ -79,23 +81,30 @@ export default function WatchView({ id }) {
             )}
           </div>
         </div>
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <h3>Danh sách tập</h3>
-          {episodes.length ? (
-            <div className="episode-row">
-              {episodes.map(ep => (
-                <a key={ep.id}
-                   href={`#/watch/${id}/episode/${ep.id}`}
-                   onClick={e => { e.preventDefault(); setCurrentEpisode(ep); }}
-                   className={currentEpisode && ep.id === currentEpisode.id ? 'episode-btn active' : 'episode-btn'}>
-                  <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
-                    <div style={{fontSize:13}}>Tập {ep.number}</div>
-                    {ep.title ? <div style={{fontSize:12,color:'var(--muted)'}}>{ep.title}</div> : null}
-                  </div>
-                </a>
-              ))}
+          <div className="episode-list">
+            <div class="left">
+              <img src={item.cover_url} alt={item.title} style={{ width: '100%', display: "flex", height: 'auto', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }} />
             </div>
-          ) : <p className="notice">Chưa có tập nào.</p>}
+            <div class="right">
+              {episodes.length ? (
+                <div className="episode-row">
+                  {episodes.map(ep => (
+                    <a key={ep.id}
+                      href={`#/watch/${id}/episode/${ep.id}`}
+                      onClick={e => { e.preventDefault(); setCurrentEpisode(ep); }}
+                      className={currentEpisode && ep.id === currentEpisode.id ? 'episode-btn active' : 'episode-btn'}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ fontSize: 13 }}>Tập {ep.number}</div>
+                        {ep.title ? <div style={{ fontSize: 12, color: 'var(--muted)' }}>{ep.title}</div> : null}
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : <p className="notice">Chưa có tập nào.</p>}
+            </div>
+          </div>
         </div>
         <div style={{ marginTop: 12 }}><a className="back-link" href="#/">← Quay lại</a></div>
       </div>
@@ -113,13 +122,13 @@ function FollowLikeControls({ id }) {
     setUser(u);
     let mounted = true;
     if (u) {
-  authFetch('/api/me').then(r => r.json()).then(data => {
+      authFetch('/api/me').then(r => r.json()).then(data => {
         if (!mounted) return;
         const f = (data.follows || []).some(x => x.type === 'anime' && String(x.target_id) === String(id));
         const l = (data.likes || []).some(x => x.type === 'anime' && String(x.target_id) === String(id));
         setFollowing(!!f);
         setLiked(!!l);
-      }).catch(()=>{});
+      }).catch(() => { });
     }
     return () => mounted = false;
   }, [id]);
@@ -127,19 +136,19 @@ function FollowLikeControls({ id }) {
   async function toggleFollow() {
     if (!user) return window.location.hash = '#/auth';
     try {
-  const res = await authFetch('/api/me/follow', { method: 'POST', body: JSON.stringify({ type: 'anime', targetId: id }) });
+      const res = await authFetch('/api/me/follow', { method: 'POST', body: JSON.stringify({ type: 'anime', targetId: id }) });
       const j = await res.json();
       if (res.ok) setFollowing(!!j.following);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   async function toggleLike() {
     if (!user) return window.location.hash = '#/auth';
     try {
-  const res = await authFetch('/api/me/like', { method: 'POST', body: JSON.stringify({ type: 'anime', targetId: id }) });
+      const res = await authFetch('/api/me/like', { method: 'POST', body: JSON.stringify({ type: 'anime', targetId: id }) });
       const j = await res.json();
       if (res.ok) setLiked(!!j.liked);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   return (

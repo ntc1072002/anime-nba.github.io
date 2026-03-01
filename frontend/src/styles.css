@@ -40,6 +40,35 @@ body {
 .brand {
   display:flex;align-items:center;gap:12px
 }
+.episode-list {
+  display: flex;
+  align-items: flex-start;
+  margin-left: 0%;
+  margin-top: 0%;
+  gap: 20px;
+}
+.episode-list .left {
+  order: 1;   /* poster nằm bên trái */
+}
+
+.episode-list .right {
+  order: 2;   /* button nằm bên phải */
+  width: 900px;
+  flex-wrap: wrap;
+}
+/* .right {
+  flex-shrink: 0;
+} */
+.episode-list .left {
+  flex: 1;
+}
+
+.episode-list .left img {
+  width: 140px;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+}
 .brand .logo {
   width:44px;height:44px;border-radius:8px;background:var(--accent);
   display:flex;align-items:center;justify-content:center;font-weight:700;color:white
@@ -147,7 +176,7 @@ body {
 .chapter-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px }
 
 /* horizontal episode row (for anime) */
-.episode-row { display:flex; gap:10px; margin-top:8px; overflow-x:auto; padding-bottom:6px }
+.episode-row { display:flex; flex-wrap: wrap;   /* 👈 cho phép xuống hàng */; gap:10px; margin-top:8px; overflow-x:auto; padding-bottom:6px }
 .episode-row::-webkit-scrollbar{ height:8px }
 .episode-row::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.04); border-radius:8px }
 

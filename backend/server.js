@@ -708,8 +708,8 @@ app.post(
       if (!req.file) return res.status(400).json({ error: 'image required' });
       if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
 
-      const FormData = require('form-data');
-      const axios = require('axios');
+      // const FormData = require('form-data');
+      // const axios = require('axios');
       
       const form = new FormData();
       form.append('image', req.file.buffer, `anime-${req.params.id}-cover.jpg`);
