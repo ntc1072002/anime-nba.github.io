@@ -191,7 +191,7 @@ function AnimeCard({ anime }) {
             {episodes.slice(0, 6).map(ep => (
               <a
                 key={ep.id}
-                href={`#/watch/${anime.id}/episode/${ep.id}`}
+                href={`#/watch/${anime.id}/episodes/${ep.id}`}
                 // href={`#/watch/${id}/episode/${ep.id}`}
                 // onClick={e => { e.preventDefault(); setCurrentEpisode(ep.id); }}
                 style={{
