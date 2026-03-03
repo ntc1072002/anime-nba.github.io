@@ -26,8 +26,8 @@ export default function Header() {
 
       <nav className="nav-links">
         <a href="#/">Trang chủ</a>
-        <a href="#/">Truyện</a>
-        <a href="#/">Anime</a>
+        <a href="#/">Theo dõi</a>
+        {/* <a href="#/">Anime</a> */}
         {user && user.role === 'admin' ? (
           <a href="#/admin" style={{ marginLeft: 18, fontWeight: 600, color: "white" }}>Admin</a>
         ) : null}
