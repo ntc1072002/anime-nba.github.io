@@ -58,6 +58,27 @@ export default function WatchView({ id }) {
   }, [id]);
 
   /* =============================
+     CONVERT GOOGLE DRIVE URL
+  ============================= */
+  function normalizeEmbedUrl(url) {
+    if (!url) return url;
+
+    // Google Drive dạng /file/d/ID/view
+    const match = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if (match) {
+      return `https://drive.google.com/file/d/${match[1]}/preview`;
+    }
+
+    // dạng open?id=
+    const match2 = url.match(/[?&]id=([^&]+)/);
+    if (url.includes("drive.google.com") && match2) {
+      return `https://drive.google.com/file/d/${match2[1]}/preview`;
+    }
+
+    return url;
+  }
+
+  /* =============================
      LISTEN URL CHANGE
   ============================== */
   useEffect(() => {
@@ -85,7 +106,7 @@ export default function WatchView({ id }) {
     <div className="app-container">
       <div className="col">
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 , gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12 }}>
           <h2 className="page-title" style={{ margin: 0 }}>{item.title}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             <FollowLikeControls id={id} />
@@ -96,8 +117,11 @@ export default function WatchView({ id }) {
         <div className="card">
           <div className="iframe-wrap">
             <iframe
-              key={currentEpisode?.id}   // ⭐ VERY IMPORTANT
-              src={currentEpisode?.embed_url || item.embed_url}
+              key={currentEpisode?.id}
+              src={normalizeEmbedUrl(
+                currentEpisode?.embed_url || item.embed_url
+              )}
+              allow="autoplay; fullscreen"
               allowFullScreen
               title={currentEpisode?.title || item.title}
             />
@@ -112,29 +136,29 @@ export default function WatchView({ id }) {
               <img src={item.cover_url} alt={item.title} style={{ width: '100%', display: "flex", height: 'auto', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }} />
             </div>
             <div class="right">
-            <div className="episode-row">
-              {episodes.map(ep => (
-                <a
-                  key={ep.id}
-                  href={`#/watch/${id}/episodes/${ep.id}`}
-                  className={
-                    currentEpisode?.id === ep.id
-                      ? "episode-btn active"
-                      : "episode-btn"
-                  }
-                >
-                  Tập {ep.number}
-                </a>
-              ))}
+              <div className="episode-row">
+                {episodes.map(ep => (
+                  <a
+                    key={ep.id}
+                    href={`#/watch/${id}/episodes/${ep.id}`}
+                    className={
+                      currentEpisode?.id === ep.id
+                        ? "episode-btn active"
+                        : "episode-btn"
+                    }
+                  >
+                    Tập {ep.number}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div style={{ marginTop: 12 }}>
-        <a className="back-link" href="#/">← Quay lại</a>
+        <div style={{ marginTop: 12 }}>
+          <a className="back-link" href="#/">← Quay lại</a>
+        </div>
       </div>
-    </div>
     </div >
   );
 }
