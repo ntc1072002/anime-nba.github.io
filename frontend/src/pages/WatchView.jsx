@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { authFetch, getUserFromToken } from '../utils/auth.js';
 import { API_BASE } from '../config.js';
 
-export default function WatchView({ id }) {
+export default function WatchView({ id , episodeId}) {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [episodes, setEpisodes] = useState([]);
@@ -10,7 +10,7 @@ export default function WatchView({ id }) {
 
   useEffect(() => {
     let mounted = true;
-    fetch(`${API_BASE}/api/anime/${id}`)
+    fetch(`${API_BASE}/api/anime/${id}/episodes/${episodeId}`)
       .then(r => r.json())
       .then(data => { if (mounted) setItem(data); })
       .catch(err => console.error(err))
