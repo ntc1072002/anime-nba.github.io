@@ -83,7 +83,7 @@ export default function Admin() {
   const [episodeNumber, setEpisodeNumber] = useState(1);
   const [episodeTitle, setEpisodeTitle] = useState("");
   const [episodeEmbed, setEpisodeEmbed] = useState("");
-  const [episodeImagesList, setEpisodeImagesList] = useState([{ url: '', order: 1 }]);
+  // const [episodeImagesList, setEpisodeImagesList] = useState([{ url: '', order: 1 }]);
 
   // ensure defaults when lists load
   React.useEffect(() => {
@@ -168,25 +168,36 @@ export default function Admin() {
   async function addEpisode(e) {
     e.preventDefault();
     try {
-      // build images array from structured list; keep compatibility if list empty
-      let images = [];
-      const hasStructured = episodeImagesList && episodeImagesList.some(i => i.url && i.url.trim());
-      if (hasStructured) {
-        images = episodeImagesList
-          .filter(i => i.url && i.url.trim())
-          .map(i => ({ order: Number(i.order) || 1, url: i.url.trim() }))
-          .sort((a, b) => a.order - b.order);
-      } else {
-        images = episodeImagesList.split(',').map(s => s.trim()).filter(Boolean).map((u, idx) => ({ order: idx + 1, url: u }));
-      }
-      const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed, images }) });
+  const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
-      setStatus({ ok: true, msg: `Episode added (id: ${data.id})` });
-      setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber + 1);
-      setEpisodeImagesList([{ url: '', order: episodeNumber + 1 }]);
-    } catch (err) { setStatus({ ok: false, msg: err.message }); }
+      setStatus({ ok:true, msg: `Episode added (id: ${data.id})` });
+      setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber+1);
+    } catch (err) { setStatus({ ok:false, msg: err.message }); }
   }
+
+  // async function addEpisode(e) {
+  //   e.preventDefault();
+  //   try {
+  //     // build images array from structured list; keep compatibility if list empty
+  //     let images = [];
+  //     const hasStructured = episodeImagesList && episodeImagesList.some(i => i.url && i.url.trim());
+  //     if (hasStructured) {
+  //       images = episodeImagesList
+  //         .filter(i => i.url && i.url.trim())
+  //         .map(i => ({ order: Number(i.order) || 1, url: i.url.trim() }))
+  //         .sort((a, b) => a.order - b.order);
+  //     } else {
+  //       images = episodeImagesList.split(',').map(s => s.trim()).filter(Boolean).map((u, idx) => ({ order: idx + 1, url: u }));
+  //     }
+  //     const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed, images }) });
+  //     const data = await res.json();
+  //     if (!res.ok) throw new Error(data.error || 'Failed');
+  //     setStatus({ ok: true, msg: `Episode added (id: ${data.id})` });
+  //     setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber + 1);
+  //     setEpisodeImagesList([{ url: '', order: episodeNumber + 1 }]);
+  //   } catch (err) { setStatus({ ok: false, msg: err.message }); }
+  // }
 
   return (
     <div className="app-container">
@@ -284,7 +295,7 @@ export default function Admin() {
                             <input style={{ flex: 1 }} value={editChapterData.title || ''} onChange={e => setEditChapterData(prev => ({ ...prev, title: e.target.value }))} />
                             <button className="btn" onClick={async () => {
                               try {
-                                const res = await authFetch(`/api/manga/${targetMangaId}/chapters/${editChapterId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editChapterData) });
+                                const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${editChapterId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editChapterData) });
                                 const j = await res.json();
                                 if (!res.ok) throw new Error(j.error || 'Failed');
                                 setEditChapterId(null); setEditChapterData({}); fetchChapters(targetMangaId);
@@ -302,7 +313,7 @@ export default function Admin() {
                               <button className="btn secondary" onClick={async () => {
                                 if (!confirm('Xóa chương này?')) return;
                                 try {
-                                  const res = await authFetch(`/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
+                                  const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
                                   if (!res.ok) throw new Error('Failed');
                                   fetchChapters(targetMangaId);
                                 } catch (err) { alert(err.message); }
@@ -355,7 +366,7 @@ export default function Admin() {
                             <input style={{ flex: 1 }} value={editEpisodeData.embed_url || ''} onChange={e => setEditEpisodeData(prev => ({ ...prev, embed_url: e.target.value }))} />
                             <button className="btn" onClick={async () => {
                               try {
-                                const res = await authFetch(`/api/anime/${targetAnimeId}/episodes/${editEpisodeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editEpisodeData) });
+                                const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${editEpisodeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editEpisodeData) });
                                 const j = await res.json();
                                 if (!res.ok) throw new Error(j.error || 'Failed');
                                 setEditEpisodeId(null); setEditEpisodeData({}); fetchEpisodes(targetAnimeId);
@@ -373,7 +384,7 @@ export default function Admin() {
                               <button className="btn secondary" onClick={async () => {
                                 if (!confirm('Xóa tập này?')) return;
                                 try {
-                                  const res = await authFetch(`/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
+                                  const res = await authFetch(`${API_BASE}/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
                                   if (!res.ok) throw new Error('Failed');
                                   fetchEpisodes(targetAnimeId);
                                 } catch (err) { alert(err.message); }
@@ -419,7 +430,7 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
 
   const handleSave = async (id) => {
     try {
-      const res = await authFetch(`/api/manga/${id}`, {
+      const res = await authFetch(`${API_BASE}/api/manga/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData)
@@ -437,7 +448,7 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
   // Enhanced save for anime: update metadata and upload cover if provided
   const handleSaveWithCoverAnime = async (id) => {
     try {
-      const res = await authFetch(`/api/anime/${id}`, {
+      const res = await authFetch(`${API_BASE}/api/anime/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData)
@@ -472,7 +483,7 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
   const handleSaveWithCover = async (id) => {
     try {
       // update metadata first
-      const res = await authFetch(`/api/manga/${id}`, {
+      const res = await authFetch(`${API_BASE}/api/manga/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData)
@@ -607,7 +618,7 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, status, setStatus }) 
 
   const handleSave = async (id) => {
     try {
-      const res = await authFetch(`/api/anime/${id}`, {
+      const res = await authFetch(`${API_BASE}/api/anime/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData)
@@ -625,7 +636,7 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, status, setStatus }) 
   const handleDelete = async (id) => {
     if (!window.confirm('Bạn chắc chắn muốn xóa?')) return;
     try {
-      const res = await authFetch(`/api/anime/${id}`, { method: 'DELETE' });
+      const res = await authFetch(`${API_BASE}/api/anime/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       setStatus({ ok: true, msg: 'Anime đã xóa' });
       fetchAnimeList();
@@ -731,7 +742,7 @@ function UsersPanel() {
   async function fetchUsers() {
     setLoading(true);
     try {
-      const res = await authFetch(`/api/admin/users`);
+      const res = await authFetch(`${API_BASE}/api/admin/users`);
       if (!res.ok) throw new Error('Không thể lấy users');
       // const data = await res.json();
       // console.log(API_BASE);
@@ -755,7 +766,7 @@ function UsersPanel() {
   async function changeRole(userId, role) {
     setStatus(null);
     try {
-      const res = await authFetch(`/api/admin/users/${userId}/role`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) });
+      const res = await authFetch(`${API_BASE}/api/admin/users/${userId}/role`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || 'Thất bại!');
       setStatus({ ok: true, msg: `Quyền hạn đã được cấp cho ${j.username} : ${j.role}` });
