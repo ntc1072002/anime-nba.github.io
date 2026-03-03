@@ -23,7 +23,7 @@ export default function WatchView({ id , episodeId}) {
       }
     }).catch(() => { });
     return () => (mounted = false);
-  }, [id]);
+  }, [id, episodeId]);
 
   // extract direct video URL from common embed providers
   function extractVideoUrl(url) {
