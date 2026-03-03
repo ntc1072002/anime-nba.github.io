@@ -124,6 +124,7 @@ app.post("/api/anime", authenticateJWT, requireRole('admin'), async (req, res) =
   try {
     const ref = await firestore.collection('anime').add({
       title: req.body.title,
+      description: req.body.description || undefined,
       embed_url: req.body.embed_url || null,
       created_at: new Date()
     });
