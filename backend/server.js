@@ -137,9 +137,10 @@ app.post("/api/anime", authenticateJWT, requireRole('admin'), async (req, res) =
 // UPDATE anime
 app.put("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
-    const { title, embed_url } = req.body;
+    const { title, description, embed_url } = req.body;
     await firestore.collection('anime').doc(req.params.id).update({
       title: title || undefined,
+      description: description || undefined,
       embed_url: embed_url || undefined,
       updated_at: new Date()
     });

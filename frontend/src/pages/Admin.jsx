@@ -15,7 +15,7 @@ export default function Admin() {
     e.preventDefault();
     setStatus(null);
     try {
-      const payload = type === "manga" ? { title, description } : { title, embed_url: embedUrl };
+      const payload = type === "manga" ? { title, description } : { title, description, embed_url: embedUrl };
       const res = await authFetch(`/api/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
@@ -168,12 +168,12 @@ export default function Admin() {
   async function addEpisode(e) {
     e.preventDefault();
     try {
-  const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed }) });
+      const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
-      setStatus({ ok:true, msg: `Episode added (id: ${data.id})` });
-      setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber+1);
-    } catch (err) { setStatus({ ok:false, msg: err.message }); }
+      setStatus({ ok: true, msg: `Episode added (id: ${data.id})` });
+      setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber + 1);
+    } catch (err) { setStatus({ ok: false, msg: err.message }); }
   }
 
   // async function addEpisode(e) {
@@ -445,40 +445,6 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
     }
   };
 
-  // Enhanced save for anime: update metadata and upload cover if provided
-  const handleSaveWithCoverAnime = async (id) => {
-    try {
-      const res = await authFetch(`${API_BASE}/api/anime/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update');
-
-      if (editData.coverFile) {
-        try {
-          const token = getToken();
-          const fd = new FormData();
-          fd.append('image', editData.coverFile);
-          const uploadUrl = `${API_BASE}/api/anime/${id}/cover`;
-          const uploadRes = await fetch(uploadUrl, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd });
-          const uj = await uploadRes.json();
-          if (!uploadRes.ok) throw new Error(uj.error || 'Upload failed');
-        } catch (err) {
-          console.error('Cover upload error', err);
-        }
-      }
-
-      setStatus({ ok: true, msg: `Anime cập nhật (${editData.title})` });
-      setEditId(null);
-      setEditData({});
-      fetchAnimeList();
-    } catch (err) {
-      setStatus({ ok: false, msg: err.message });
-    }
-  };
-
   // Enhanced save: also upload cover if provided
   const handleSaveWithCover = async (id) => {
     try {
@@ -616,6 +582,39 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, status, setStatus }) 
     setEditData({ ...anime });
   };
 
+  // Enhanced save for anime: update metadata and upload cover if provided
+  const handleSaveWithCoverAnime = async (id) => {
+    try {
+      const res = await authFetch(`${API_BASE}/api/anime/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editData)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update');
+
+      if (editData.coverFile) {
+        try {
+          const token = getToken();
+          const fd = new FormData();
+          fd.append('image', editData.coverFile);
+          const uploadUrl = `${API_BASE}/api/anime/${id}/cover`;
+          const uploadRes = await fetch(uploadUrl, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd });
+          const uj = await uploadRes.json();
+          if (!uploadRes.ok) throw new Error(uj.error || 'Upload failed');
+        } catch (err) {
+          console.error('Cover upload error', err);
+        }
+      }
+
+      setStatus({ ok: true, msg: `Anime cập nhật (${editData.title})` });
+      setEditId(null);
+      setEditData({});
+      fetchAnimeList();
+    } catch (err) {
+      setStatus({ ok: false, msg: err.message });
+    }
+  };
   const handleSave = async (id) => {
     try {
       const res = await authFetch(`${API_BASE}/api/anime/${id}`, {
