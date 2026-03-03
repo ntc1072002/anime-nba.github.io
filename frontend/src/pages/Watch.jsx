@@ -283,7 +283,7 @@ function AnimeCard({ anime }) {
                   🎬 {episodes.length} tập
                 </p>
                 <a
-                  href={`#/watch/${anime.id}`}
+                  href={`#/watch/${anime.id}/episode/${episodes[0]?.id || ''}`}
                   style={{
                     display: 'inline-block',
                     marginTop: 12,
