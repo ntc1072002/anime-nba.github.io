@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { API_BASE } from '../config.js';
-
-export default function WatchEpisodeView({ animeId, episodeId }) {
+// , episodeId
+export default function WatchEpisodeView({ animeId }) {
   const [episode, setEpisode] = useState(null);
   const [loading, setLoading] = useState(true);
 
