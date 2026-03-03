@@ -139,7 +139,7 @@ function AnimeCard({ anime }) {
                   </button>
                 )}
                 <a
-                  href={`#/watch/${anime.id}/episodes/${episodes.length > 0 ? episodes[0].id : ''}`}
+                  href={`#/watch/${anime.id}/episodes/${ep.length > 0 ? ep[0].id : ''}`}
                   style={{
                     flex: 1,
                     padding: '8px 12px',
@@ -283,7 +283,7 @@ function AnimeCard({ anime }) {
                   🎬 {episodes.length} tập
                 </p>
                 <a
-                  href={`#/watch/${anime.id}/episodes/${episodes.length > 0 ? episodes[0].id : ''}`}
+                  href={`#/watch/${anime.id}/episodes/${ep.length > 0 ? ep[0].id : ''}`}
                   style={{
                     display: 'inline-block',
                     marginTop: 12,
