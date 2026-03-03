@@ -238,7 +238,7 @@ export default function Admin() {
               {/* {type === "manga" ? ( */}
               <div className="form-row">
                 <label>Mô tả</label>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" />
+                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" required/>
               </div>
               {type === "anime" ? (
                 <div className="form-row">

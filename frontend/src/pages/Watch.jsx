@@ -45,10 +45,10 @@ function AnimeCard({ anime }) {
       .finally(() => setLoadingEpisodes(false));
   }, [anime.id]);
 
-  // Truncate description  
+  // Truncate description
   const maxDescLength = 150;
   const isTruncated = anime.description && anime.description.length > maxDescLength;
-  const truncatedDesc = isTruncated ? anime.description.substring(0, maxDescLength) + '...' : anime.description || 'Chưa có mô tả';
+  const truncatedDesc = isTruncated ? anime.description.substring(0, maxDescLength) + '...' : anime.description || 'Không có mô tả';
 
   return (
     <>
@@ -86,13 +86,13 @@ function AnimeCard({ anime }) {
                 {anime.title}
               </a>
             </h3>
-            <p style={{
+            <p className="description" style={{
               margin: '0 0 8px 0',
               color: '#aaa',
               fontSize: 13,
-              lineHeight: 1.4,
+              lineHeight: 1.2,
               flex: 1,
-              overflow: 'hidden'
+              overflow: 'hidden',
             }}>
               {truncatedDesc}
             </p>
@@ -276,7 +276,7 @@ function AnimeCard({ anime }) {
               />
               <div style={{ flex: 1 }}>
                 <h2 style={{ margin: '0 0 8px 0', color: '#fff' }}>{anime.title}</h2>
-                <p style={{ margin: 0, color: '#aaa', fontSize: 13, lineHeight: 1.6 }}>
+                <p className="description" style={{ margin: 0, color: '#aaa', fontSize: 13, lineHeight: 1.6 }}>
                   {anime.description || 'Không có mô tả'}
                 </p>
                 <p style={{ margin: 0, color: '#aaa', fontSize: 13, lineHeight: 1.6 }}>

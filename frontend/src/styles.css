@@ -80,7 +80,7 @@ body {
 .col { background: var(--glass); padding:14px; border-radius:10px }
 .col.left { flex: 1 }
 .col.right { flex: 1 }
-
+.description { margin:0 0 12px 0; color: #94a3b8; overflow-wrap: anywhere; word-break: break-word; }
 .page-title { margin:0 0 12px 0; color: #f1f5f9 }
 
 .card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
