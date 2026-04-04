@@ -27,61 +27,46 @@ function normalizeImageUrl(value) {
 export default function ReadChapterView({ mangaId, chapterId }) {
   const [chapter, setChapter] = useState(null);
   const [manga, setManga] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [chaptersList, setChaptersList] = useState([]);
-  const [navVisible, setNavVisible] = useState(() =>
-    typeof window !== "undefined" ? !window.matchMedia("(max-width: 900px)").matches : true
-  );
-  const [navStuck, setNavStuck] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => getUserFromToken());
+  const [following, setFollowing] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 900px)").matches : false
   );
-  const [user, setUser] = useState(() => getUserFromToken());
-  const [following, setFollowing] = useState(false);
+  const [controlVisible, setControlVisible] = useState(false);
 
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
-  const lastScrollTime = useRef(Date.now());
-  const upwardDuration = useRef(0);
-  const upwardDistance = useRef(0);
-  const lastDirection = useRef("idle");
-  const navRef = useRef(null);
-  const navInitTop = useRef(null);
+  const lastScrollTs = useRef(Date.now());
+  const upwardMs = useRef(0);
+  const upwardPx = useRef(0);
+  const hideTimer = useRef(null);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
 
-    fetch(`${API_BASE}/api/manga/${mangaId}/chapters/${chapterId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (mounted) setChapter(data);
+    Promise.all([
+      fetch(`${API_BASE}/api/manga/${mangaId}/chapters/${chapterId}`).then((r) => r.json()),
+      fetch(`${API_BASE}/api/manga/${mangaId}/chapters`).then((r) => r.json()),
+      fetch(`${API_BASE}/api/manga/${mangaId}`).then((r) => r.json())
+    ])
+      .then(([chapterData, chapterList, mangaData]) => {
+        if (!mounted) return;
+        setChapter(chapterData || null);
+        setChaptersList(Array.isArray(chapterList) ? chapterList : []);
+        setManga(mangaData || null);
       })
       .catch(() => {
-        if (mounted) setChapter(null);
+        if (!mounted) return;
+        setChapter(null);
+        setChaptersList([]);
+        setManga(null);
       })
       .finally(() => {
         if (mounted) setLoading(false);
       });
 
-    fetch(`${API_BASE}/api/manga/${mangaId}/chapters`)
-      .then((r) => r.json())
-      .then((items) => {
-        if (mounted) setChaptersList(Array.isArray(items) ? items : []);
-      })
-      .catch(() => {
-        if (mounted) setChaptersList([]);
-      });
-
-    fetch(`${API_BASE}/api/manga/${mangaId}`)
-      .then((r) => r.json())
-      .then((item) => {
-        if (mounted) setManga(item || null);
-      })
-      .catch(() => {
-        if (mounted) setManga(null);
-      });
-
-    navInitTop.current = null;
     return () => {
       mounted = false;
     };
@@ -133,17 +118,15 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     const mq = window.matchMedia("(max-width: 900px)");
     const onChange = (event) => {
       setIsMobileViewport(event.matches);
-      setNavVisible(!event.matches);
-      navInitTop.current = null;
-      upwardDuration.current = 0;
-      upwardDistance.current = 0;
-      lastDirection.current = "idle";
+      setControlVisible(false);
+      upwardMs.current = 0;
+      upwardPx.current = 0;
       lastScrollY.current = window.scrollY || 0;
-      lastScrollTime.current = Date.now();
+      lastScrollTs.current = Date.now();
     };
 
     setIsMobileViewport(mq.matches);
-    setNavVisible(!mq.matches);
+    setControlVisible(false);
     if (typeof mq.addEventListener === "function") {
       mq.addEventListener("change", onChange);
       return () => mq.removeEventListener("change", onChange);
@@ -153,93 +136,79 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   }, []);
 
   useEffect(() => {
-    function resetUpwardIntent() {
-      upwardDuration.current = 0;
-      upwardDistance.current = 0;
-      lastDirection.current = "idle";
+    function clearHideTimer() {
+      if (hideTimer.current) {
+        window.clearTimeout(hideTimer.current);
+        hideTimer.current = null;
+      }
+    }
+
+    function resetUpwardState() {
+      upwardMs.current = 0;
+      upwardPx.current = 0;
+    }
+
+    function showControl() {
+      setControlVisible(true);
+      if (isMobileViewport) {
+        clearHideTimer();
+        hideTimer.current = window.setTimeout(() => {
+          setControlVisible(false);
+          resetUpwardState();
+        }, 3500);
+      }
     }
 
     function onScroll() {
       const y = window.scrollY || 0;
       const now = Date.now();
-      const delta = y - (lastScrollY.current || 0);
-
-      if (isMobileViewport) {
-        const header = document.querySelector(".site-header");
-        const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-        const headerHidden = headerBottom <= 8;
-        const dt = Math.min(500, Math.max(0, now - (lastScrollTime.current || now)));
-        const pauseTooLong = now - (lastScrollTime.current || now) > 2200;
-
-        if (y <= 80 || !headerHidden) {
-          resetUpwardIntent();
-          setNavVisible(false);
-          setNavStuck(false);
-          lastScrollY.current = y;
-          lastScrollTime.current = now;
-          return;
-        }
-
-        if (delta < -1) {
-          if (pauseTooLong || lastDirection.current !== "up") {
-            upwardDuration.current = 0;
-            upwardDistance.current = 0;
-          }
-          upwardDuration.current += dt;
-          upwardDistance.current += Math.abs(delta);
-          lastDirection.current = "up";
-          if (upwardDuration.current >= 2000 || upwardDistance.current >= 120) {
-            setNavVisible(true);
-          }
-        } else if (delta > 2) {
-          resetUpwardIntent();
-          lastDirection.current = "down";
-          setNavVisible(false);
-        } else if (pauseTooLong) {
-          resetUpwardIntent();
-        }
-
-        setNavStuck(false);
-        lastScrollY.current = y;
-        lastScrollTime.current = now;
-        return;
-      }
-
+      const dy = y - (lastScrollY.current || 0);
+      const dt = Math.min(500, Math.max(0, now - (lastScrollTs.current || now)));
       const header = document.querySelector(".site-header");
-      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-      const inHeaderZone = y <= 120 || headerBottom > 8;
+      const headerBottom = header ? header.getBoundingClientRect().bottom : -1;
+      const inTopZone = isMobileViewport ? y <= 80 || headerBottom > 8 : y <= 120;
 
-      if (inHeaderZone) {
-        setNavVisible(false);
-        setNavStuck(false);
+      if (inTopZone) {
+        clearHideTimer();
+        resetUpwardState();
+        setControlVisible(false);
         lastScrollY.current = y;
-        lastScrollTime.current = now;
+        lastScrollTs.current = now;
         return;
       }
 
-      setNavVisible((prev) => {
-        if (delta > 10) return false;
-        if (delta < -6) return true;
-        return prev;
-      });
-
-      if (navRef.current && navInitTop.current == null) {
-        const rectTop = navRef.current.getBoundingClientRect().top;
-        navInitTop.current = window.scrollY + rectTop;
+      if (!isMobileViewport) {
+        if (dy > 8) setControlVisible(false);
+        else if (dy < -6) setControlVisible(true);
+        lastScrollY.current = y;
+        lastScrollTs.current = now;
+        return;
       }
 
-      if (navInitTop.current != null) {
-        const shouldStuck = y >= Math.max(0, navInitTop.current - 2);
-        setNavStuck((prev) => (prev === shouldStuck ? prev : shouldStuck));
+      const pauseTooLong = now - (lastScrollTs.current || now) > 2200;
+      if (dy < -1) {
+        if (pauseTooLong) resetUpwardState();
+        upwardMs.current += dt;
+        upwardPx.current += Math.abs(dy);
+        if (upwardMs.current >= 2000 || upwardPx.current >= 120) showControl();
+      } else if (dy > 2) {
+        clearHideTimer();
+        resetUpwardState();
+        setControlVisible(false);
+      } else if (pauseTooLong) {
+        resetUpwardState();
       }
 
       lastScrollY.current = y;
-      lastScrollTime.current = now;
+      lastScrollTs.current = now;
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearHideTimer();
+    };
   }, [isMobileViewport]);
 
   async function toggleFollow() {
@@ -271,8 +240,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   const currentIndex = chaptersList.findIndex((c) => String(c.id) === String(chapterId));
   const prevChapter = currentIndex > 0 ? chaptersList[currentIndex - 1] : null;
-  const nextChapter =
-    currentIndex > -1 && currentIndex < chaptersList.length - 1 ? chaptersList[currentIndex + 1] : null;
+  const nextChapter = currentIndex > -1 && currentIndex < chaptersList.length - 1 ? chaptersList[currentIndex + 1] : null;
 
   if (loading) {
     return (
@@ -292,31 +260,25 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   return (
     <div className="app-container">
-      <div
-        ref={navRef}
-        className={`floating-nav ${isMobileViewport ? "floating-nav-mobile" : ""} ${navVisible ? "" : "hidden"} ${
-          !isMobileViewport && navStuck ? "stuck" : ""
-        }`}
-      >
-        <div className="left">
-          <a className="nav-button secondary" href={`#/read/${mangaId}`} aria-label="Danh sach chuong">
-            M
+      <div className={`reader-control-bar ${isMobileViewport ? "mobile" : "desktop"} ${controlVisible ? "show" : ""}`}>
+        <div className="reader-control-group">
+          <a className="reader-ctrl-btn ghost" href={`#/read/${mangaId}`}>
+            Muc luc
           </a>
           <button
-            className="nav-button"
+            className="reader-ctrl-btn"
             disabled={!prevChapter}
             onClick={() => {
               if (prevChapter) window.location.hash = `#/read/${mangaId}/chapter/${prevChapter.id}`;
             }}
-            aria-label="Chuong truoc"
           >
             {"<"}
           </button>
         </div>
 
-        <div className="center">
+        <div className="reader-control-center">
           <select
-            className="nav-select"
+            className="reader-ctrl-select"
             value={String(chapterId)}
             onChange={(e) => {
               const value = e.target.value;
@@ -332,18 +294,17 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           </select>
         </div>
 
-        <div className="right">
+        <div className="reader-control-group">
           <button
-            className="nav-button"
+            className="reader-ctrl-btn"
             disabled={!nextChapter}
             onClick={() => {
               if (nextChapter) window.location.hash = `#/read/${mangaId}/chapter/${nextChapter.id}`;
             }}
-            aria-label="Chuong sau"
           >
             {">"}
           </button>
-          <button className={`btn-follow ${following ? "active" : ""}`} onClick={toggleFollow}>
+          <button className={`reader-ctrl-follow ${following ? "active" : ""}`} onClick={toggleFollow}>
             {user ? (following ? "Dang theo doi" : "Theo doi") : "Dang nhap"}
           </button>
         </div>
@@ -386,7 +347,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
               </div>
             </div>
 
-            <div className="continuous-bleed reader-continuous reader-content" style={{ marginTop: 12 }}>
+            <div className="continuous-bleed reader-continuous" style={{ marginTop: 12 }}>
               {images.map((image, index) => (
                 <div key={index} style={{ marginBottom: 0 }}>
                   <img src={image.url} alt={`page-${image.order}`} style={{ width: "100%", display: "block" }} />
