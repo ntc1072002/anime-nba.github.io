@@ -233,10 +233,10 @@ function FollowLikeControls({ id }) {
   return (
     <>
       <button className={following ? "btn" : "btn secondary"} onClick={toggleFollow}>
-        {following ? "Dang theo doi" : "Theo doi"}
+        {following ? "Đang theo dõi" : "Theo dõi"}
       </button>
       <button className={liked ? "btn" : "btn secondary"} onClick={toggleLike}>
-        {liked ? "Da thich" : "Like"}
+        {liked ? "Đã thích" : "Thích"}
       </button>
     </>
   );
