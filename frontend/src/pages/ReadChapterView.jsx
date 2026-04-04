@@ -29,7 +29,9 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [manga, setManga] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chaptersList, setChaptersList] = useState([]);
-  const [navVisible, setNavVisible] = useState(true);
+  const [navVisible, setNavVisible] = useState(() =>
+    typeof window !== "undefined" ? !window.matchMedia("(max-width: 900px)").matches : true
+  );
   const [navStuck, setNavStuck] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 900px)").matches : false
@@ -40,6 +42,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
   const lastScrollTime = useRef(Date.now());
   const upwardDuration = useRef(0);
+  const upwardDistance = useRef(0);
   const lastDirection = useRef("idle");
   const navRef = useRef(null);
   const navInitTop = useRef(null);
@@ -130,10 +133,17 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     const mq = window.matchMedia("(max-width: 900px)");
     const onChange = (event) => {
       setIsMobileViewport(event.matches);
+      setNavVisible(!event.matches);
       navInitTop.current = null;
+      upwardDuration.current = 0;
+      upwardDistance.current = 0;
+      lastDirection.current = "idle";
+      lastScrollY.current = window.scrollY || 0;
+      lastScrollTime.current = Date.now();
     };
 
     setIsMobileViewport(mq.matches);
+    setNavVisible(!mq.matches);
     if (typeof mq.addEventListener === "function") {
       mq.addEventListener("change", onChange);
       return () => mq.removeEventListener("change", onChange);
@@ -143,6 +153,12 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   }, []);
 
   useEffect(() => {
+    function resetUpwardIntent() {
+      upwardDuration.current = 0;
+      upwardDistance.current = 0;
+      lastDirection.current = "idle";
+    }
+
     function onScroll() {
       const y = window.scrollY || 0;
       const now = Date.now();
@@ -153,11 +169,10 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
         const headerHidden = headerBottom <= 8;
         const dt = Math.min(500, Math.max(0, now - (lastScrollTime.current || now)));
-        const pauseTooLong = now - (lastScrollTime.current || now) > 850;
+        const pauseTooLong = now - (lastScrollTime.current || now) > 1200;
 
         if (y <= 80 || !headerHidden) {
-          upwardDuration.current = 0;
-          lastDirection.current = "idle";
+          resetUpwardIntent();
           setNavVisible(false);
           setNavStuck(false);
           lastScrollY.current = y;
@@ -168,17 +183,20 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         if (delta < -2) {
           if (pauseTooLong || lastDirection.current !== "up") {
             upwardDuration.current = 0;
+            upwardDistance.current = 0;
           }
           upwardDuration.current += dt;
+          upwardDistance.current += Math.abs(delta);
           lastDirection.current = "up";
-          if (upwardDuration.current >= 2000) setNavVisible(true);
+          if (upwardDuration.current >= 2000 || upwardDistance.current >= 180) {
+            setNavVisible(true);
+          }
         } else if (delta > 2) {
-          upwardDuration.current = 0;
+          resetUpwardIntent();
           lastDirection.current = "down";
           setNavVisible(false);
         } else if (pauseTooLong) {
-          upwardDuration.current = 0;
-          lastDirection.current = "idle";
+          resetUpwardIntent();
         }
 
         setNavStuck(false);
