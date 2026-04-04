@@ -1482,5 +1482,130 @@ h1, h2, h3, h4 {
   }
 }
 
+/* -------------------------------------------------
+   Header alignment overrides (desktop + mobile)
+------------------------------------------------- */
+@media (min-width: 961px) {
+  .site-header {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .site-header .nav-links {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .site-header .nav-main {
+    margin-left: auto;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .site-header .nav-user {
+    flex: 0 0 auto;
+    margin-left: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .site-header .user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .site-header .user-name {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 960px) {
+  .site-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .site-header .nav-links {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .site-header .nav-main {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .site-header .nav-user {
+    width: 100% !important;
+    margin-left: 0 !important;
+    display: block !important;
+  }
+
+  .site-header .nav-user .nav-link-auth {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  .site-header .user-chip {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 6px 10px;
+  }
+
+  .site-header .user-name {
+    min-width: 0;
+    max-width: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .site-header .bell-in-chip {
+    width: 36px;
+    height: 36px;
+    margin: 0;
+  }
+
+  .site-header .user-chip .btn {
+    min-height: 36px;
+    padding: 7px 12px;
+    white-space: nowrap;
+  }
+
+  .site-header .user-chip .bell-menu {
+    right: 0;
+    left: auto;
+    width: min(340px, calc(100vw - 28px));
+  }
+}
+
+@media (max-width: 520px) {
+  .site-header .nav-main {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 
 

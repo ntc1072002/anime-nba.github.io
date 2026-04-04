@@ -183,9 +183,14 @@ export default function Header() {
         </div>
 
         <div className="nav-user">
-          {user ? (
-            <div className="bell-wrap" ref={bellRef}>
-              <button type="button" className="bell-button" onClick={toggleBell} aria-label="Thong bao">
+          {!user ? (
+            <a href="#/auth" className={`nav-link nav-link-auth ${page === "auth" ? "active" : ""}`}>
+              Dang nhap
+            </a>
+          ) : (
+            <div className="user-chip" ref={bellRef}>
+              <span className="user-name">Hi, {user.username}</span>
+              <button type="button" className="bell-button bell-in-chip" onClick={toggleBell} aria-label="Thong bao">
                 <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
                   <path
                     fill="currentColor"
@@ -193,6 +198,9 @@ export default function Header() {
                   />
                 </svg>
                 {unreadCount > 0 ? <span className="bell-badge">{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
+              </button>
+              <button onClick={logout} className="btn secondary">
+                Dang xuat
               </button>
 
               {bellOpen ? (
@@ -226,19 +234,6 @@ export default function Header() {
                   )}
                 </div>
               ) : null}
-            </div>
-          ) : null}
-
-          {!user ? (
-            <a href="#/auth" className={`nav-link nav-link-auth ${page === "auth" ? "active" : ""}`}>
-              Dang nhap
-            </a>
-          ) : (
-            <div className="user-chip">
-              <span>Hi, {user.username}</span>
-              <button onClick={logout} className="btn secondary">
-                Dang xuat
-              </button>
             </div>
           )}
         </div>
