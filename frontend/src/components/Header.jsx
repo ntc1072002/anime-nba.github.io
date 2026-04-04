@@ -74,7 +74,7 @@ export default function Header() {
         const res = await authFetch("/api/me/notifications/unread-count");
         const data = await res.json();
         if (mounted && res.ok) setUnreadCount(Number(data.unread) || 0);
-      } catch {}
+      } catch { }
     }
 
     loadUnreadCount();
@@ -122,7 +122,7 @@ export default function Header() {
       if (!res.ok) return;
       setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)));
       setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch {}
+    } catch { }
   }
 
   async function markAllAsRead() {
@@ -160,11 +160,9 @@ export default function Header() {
 
   return (
     <header className="site-header">
-      <div className="brand">
+      <div className="brand" onClick={() => window.location.href = `#/)}`}>
         <div className="logo">
-          <a href="#/" className="logo-link">
-          BT
-          </a>
+            BT
         </div>
         <div className="brand-copy">
           <h1>Bao Tang Truyen</h1>
