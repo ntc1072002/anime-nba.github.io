@@ -284,6 +284,104 @@ body {
 /* grid for chapter list */
 .chapter-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px }
 
+/* Table-like chapter list (manga detail page) */
+.chapter-table-panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+}
+
+.chapter-table-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 2px solid rgba(239, 68, 68, 0.85);
+}
+
+.chapter-table-head h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.chapter-table-icon {
+  width: 16px;
+  height: 12px;
+  position: relative;
+  display: inline-block;
+}
+
+.chapter-table-icon::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: #f8fbff;
+  box-shadow: 0 5px 0 #f8fbff, 0 10px 0 #f8fbff;
+  border-radius: 2px;
+}
+
+.chapter-table-list {
+  max-height: 560px;
+  overflow: auto;
+}
+
+.chapter-table-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px;
+  color: #f3f7ff;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(255,255,255,0.09);
+}
+
+.chapter-table-row:last-child {
+  border-bottom: 0;
+}
+
+.chapter-table-row:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.chapter-table-row.active {
+  background: rgba(95, 183, 247, 0.18);
+  border-color: rgba(95, 183, 247, 0.4);
+}
+
+.chapter-table-num {
+  font-size: 32px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.chapter-table-time {
+  color: #d2dff2;
+  font-size: 32px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .chapter-table-list {
+    max-height: none;
+  }
+
+  .chapter-table-row {
+    padding: 14px 12px;
+  }
+
+  .chapter-table-num,
+  .chapter-table-time {
+    font-size: 16px;
+    line-height: 1.3;
+  }
+}
+
 /* horizontal episode row (for anime) */
 .episode-row { display:flex; flex-wrap: wrap;   /* 👈 cho phép xuống hàng */; gap:10px; margin-top:8px; overflow-x:auto; padding-bottom:6px }
 .episode-row::-webkit-scrollbar{ height:8px }

@@ -52,7 +52,10 @@ function formatRelativeTime(value) {
   if (hours < 24) return `${hours} gio truoc`;
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days} ngay truoc`;
-  return new Date(ms).toLocaleDateString("vi-VN");
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} thang truoc`;
+  const years = Math.floor(months / 12);
+  return `${years} nam truoc`;
 }
 
 export default function ReadView({ id }) {
@@ -74,8 +77,8 @@ export default function ReadView({ id }) {
 
     fetch(`${API_BASE}/api/manga/${id}/chapters`)
       .then((r) => r.json())
-      .then((d) => {
-        if (mounted) setChapters(Array.isArray(d) ? d : []);
+      .then((data) => {
+        if (mounted) setChapters(Array.isArray(data) ? data : []);
       })
       .catch(() => {
         if (mounted) setChapters([]);
@@ -86,23 +89,26 @@ export default function ReadView({ id }) {
     };
   }, [id]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="app-container">
         <div className="col">Dang tai...</div>
       </div>
     );
+  }
 
-  if (!item || item.error)
+  if (!item || item.error) {
     return (
       <div className="app-container">
         <div className="col">Khong tim thay truyen.</div>
       </div>
     );
+  }
 
   const posterUrl = normalizeImageUrl(
     (item && (item.cover_url || item.cover || item.poster || item.thumbnail)) || null
   );
+  const orderedChapters = [...chapters].sort((a, b) => Number(b?.number || 0) - Number(a?.number || 0));
 
   return (
     <div className="app-container">
@@ -115,7 +121,15 @@ export default function ReadView({ id }) {
           ) : null}
 
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap"
+              }}
+            >
               <h2 className="page-title" style={{ margin: 0, minWidth: 0 }}>
                 {item.title}
               </h2>
@@ -130,15 +144,23 @@ export default function ReadView({ id }) {
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <h3>Danh sach chapters</h3>
-          {chapters.length ? (
-            <div className="chapter-grid">
-              {chapters.map((c) => (
-                <ChapterLink key={c.id} id={id} c={c} />
-              ))}
-            </div>
+          {orderedChapters.length ? (
+            <section className="chapter-table-panel">
+              <header className="chapter-table-head">
+                <span className="chapter-table-icon" aria-hidden="true" />
+                <h3>Danh sach chuong</h3>
+              </header>
+              <div className="chapter-table-list">
+                {orderedChapters.map((c) => (
+                  <ChapterRow key={c.id} mangaId={id} chapter={c} />
+                ))}
+              </div>
+            </section>
           ) : (
-            <p className="notice">Chua co chapter nao.</p>
+            <>
+              <h3>Danh sach chuong</h3>
+              <p className="notice">Chua co chapter nao.</p>
+            </>
           )}
         </div>
 
@@ -220,8 +242,9 @@ function FollowLikeControls({ id }) {
   );
 }
 
-function ChapterLink({ id, c }) {
+function ChapterRow({ mangaId, chapter }) {
   const [hash, setHash] = useState(() => (typeof window !== "undefined" ? window.location.hash : ""));
+
   useEffect(() => {
     function onHash() {
       setHash(window.location.hash);
@@ -230,14 +253,14 @@ function ChapterLink({ id, c }) {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  const isActive = hash.includes(`/read/${id}/chapter/${c.id}`);
-  const timeLabel = formatRelativeTime(c.updated_at || c.created_at);
+  const isActive = hash.includes(`/read/${mangaId}/chapter/${chapter.id}`);
+  const timeLabel = formatRelativeTime(chapter.updated_at || chapter.created_at);
+  const chapterLabel = chapter.title ? `Chapter ${chapter.number} - ${chapter.title}` : `${chapter.number}`;
 
   return (
-    <a key={c.id} className={`chapter-btn ${isActive ? "active" : ""}`} href={`#/read/${id}/chapter/${c.id}`}>
-      Chuong {c.number}
-      {timeLabel ? ` • ${timeLabel}` : ""}
-      {c.title ? ` - ${c.title}` : ""}
+    <a className={`chapter-table-row ${isActive ? "active" : ""}`} href={`#/read/${mangaId}/chapter/${chapter.id}`}>
+      <span className="chapter-table-num">{chapterLabel}</span>
+      <span className="chapter-table-time">{timeLabel || "-"}</span>
     </a>
   );
 }
