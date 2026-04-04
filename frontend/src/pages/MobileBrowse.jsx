@@ -190,9 +190,6 @@ export default function MobileBrowse({ type = "manga" }) {
                 <a key={item.id} href={item.primaryHref} className="mobile-highlight-card">
                   <div className="mobile-highlight-poster">
                     {item.cover_url ? <img src={item.cover_url} alt={item.title} /> : <div className="mobile-cover-empty">No image</div>}
-                    <span className="mobile-arrow" aria-hidden="true">
-                      ›
-                    </span>
                   </div>
                   <h3>{item.title || "Khong ten"}</h3>
                   <div className="mobile-highlight-meta">
