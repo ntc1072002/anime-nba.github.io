@@ -34,6 +34,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [navVisible, setNavVisible] = useState(false);
   const [navAtHeader, setNavAtHeader] = useState(false);
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
+  const upwardRevealPx = useRef(0);
 
   useEffect(() => {
     let mounted = true;
@@ -106,6 +107,13 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   }, [user, mangaId]);
 
   useEffect(() => {
+    setNavVisible(false);
+    setNavAtHeader(false);
+    upwardRevealPx.current = 0;
+    lastScrollY.current = typeof window !== "undefined" ? window.scrollY : 0;
+  }, [mangaId, chapterId]);
+
+  useEffect(() => {
     function onScroll() {
       const y = window.scrollY || 0;
       const delta = y - (lastScrollY.current || 0);
@@ -116,16 +124,26 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       if (mainHeaderVisible) {
         setNavVisible(false);
         setNavAtHeader(false);
+        upwardRevealPx.current = 0;
       } else {
         setNavAtHeader(true);
-        if (delta > 2) setNavVisible(true);
+
+        // Keep toolbar fixed once shown, until the main header appears again.
+        if (!navVisible) {
+          if (delta < -2) {
+            upwardRevealPx.current += Math.abs(delta);
+            if (upwardRevealPx.current >= 48) setNavVisible(true);
+          } else if (delta > 2) {
+            upwardRevealPx.current = 0;
+          }
+        }
       }
       lastScrollY.current = y;
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [navVisible]);
 
   async function toggleFollow() {
     if (!user) {
