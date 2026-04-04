@@ -106,9 +106,9 @@ export default function WatchView({ id }) {
     <div className="app-container">
       <div className="col">
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12 }}>
-          <h2 className="page-title" style={{ margin: 0 }}>{item.title}</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
+          <h2 className="page-title" style={{ margin: 0, minWidth: 0 }}>{item.title}</h2>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <FollowLikeControls id={id} />
           </div>
         </div>

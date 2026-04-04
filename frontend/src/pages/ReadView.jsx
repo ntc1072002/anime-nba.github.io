@@ -47,16 +47,16 @@ export default function ReadView({ id }) {
   return (
     <div className="app-container">
       <div className="col">
-        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
           {posterUrl ? (
             <div style={{ flex: '0 0 auto' }}>
               <img src={posterUrl} alt="poster" style={{ width: 120, height: 'auto', borderRadius: 6 }} />
             </div>
           ) : null}
           <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <h2 className="page-title" style={{ margin: 0 }}>{item.title}</h2>
-              <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <h2 className="page-title" style={{ margin: 0, minWidth: 0 }}>{item.title}</h2>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <FollowLikeControls id={id} />
               </div>
             </div>
