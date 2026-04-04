@@ -513,8 +513,30 @@ body {
 }
 
 /* back link styling */
-.back-link { display:inline-flex; align-items:center; gap:8px; color:var(--muted); text-decoration:none; padding:6px 8px; border-radius:8px }
-.back-link:hover { color: white; text-decoration:none }
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #f1f7ff;
+  background: rgba(95, 183, 247, 0.05);
+  border: 1.5px solid rgba(95, 183, 247, 0.25);
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  font-size: 15px;
+}
+
+.back-link:hover {
+  background: rgba(95, 183, 247, 0.12);
+  border-color: rgba(95, 183, 247, 0.5);
+  box-shadow: 0 4px 12px rgba(95, 183, 247, 0.15);
+  transform: translateY(-1px);
+  color: white;
+  text-decoration: none;
+}
 
 /* small polish for card content spacing */
 .card .notice { margin:12px 0 }
