@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { authFetch, getUserFromToken } from "../utils/auth.js";
 import { API_BASE } from "../config.js";
 
 function normalizeImageUrl(value) {
@@ -29,8 +28,6 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [manga, setManga] = useState(null);
   const [chaptersList, setChaptersList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(() => getUserFromToken());
-  const [following, setFollowing] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(() =>
     typeof window !== "undefined" ? window.matchMedia("(max-width: 900px)").matches : false
   );
@@ -38,9 +35,6 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
   const lastScrollTs = useRef(Date.now());
-  const upwardMs = useRef(0);
-  const upwardPx = useRef(0);
-  const hideTimer = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -73,54 +67,12 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   }, [mangaId, chapterId]);
 
   useEffect(() => {
-    function syncUser() {
-      setUser(getUserFromToken());
-    }
-    syncUser();
-    window.addEventListener("hashchange", syncUser);
-    window.addEventListener("storage", syncUser);
-    return () => {
-      window.removeEventListener("hashchange", syncUser);
-      window.removeEventListener("storage", syncUser);
-    };
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-    if (!user) {
-      setFollowing(false);
-      return () => {
-        mounted = false;
-      };
-    }
-
-    authFetch("/api/me")
-      .then((r) => r.json())
-      .then((data) => {
-        if (!mounted) return;
-        const current = (data.follows || []).some(
-          (x) => x.type === "manga" && String(x.target_id) === String(mangaId)
-        );
-        setFollowing(!!current);
-      })
-      .catch(() => {
-        if (mounted) setFollowing(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [user, mangaId]);
-
-  useEffect(() => {
     if (typeof window === "undefined") return undefined;
 
     const mq = window.matchMedia("(max-width: 900px)");
     const onChange = (event) => {
       setIsMobileViewport(event.matches);
       setControlVisible(false);
-      upwardMs.current = 0;
-      upwardPx.current = 0;
       lastScrollY.current = window.scrollY || 0;
       lastScrollTs.current = Date.now();
     };
@@ -136,67 +88,27 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   }, []);
 
   useEffect(() => {
-    function clearHideTimer() {
-      if (hideTimer.current) {
-        window.clearTimeout(hideTimer.current);
-        hideTimer.current = null;
-      }
-    }
-
-    function resetUpwardState() {
-      upwardMs.current = 0;
-      upwardPx.current = 0;
-    }
-
-    function showControl() {
-      setControlVisible(true);
-      if (isMobileViewport) {
-        clearHideTimer();
-        hideTimer.current = window.setTimeout(() => {
-          setControlVisible(false);
-          resetUpwardState();
-        }, 3500);
-      }
-    }
-
     function onScroll() {
       const y = window.scrollY || 0;
       const now = Date.now();
       const dy = y - (lastScrollY.current || 0);
-      const dt = Math.min(500, Math.max(0, now - (lastScrollTs.current || now)));
       const header = document.querySelector(".site-header");
       const headerBottom = header ? header.getBoundingClientRect().bottom : -1;
-      const inTopZone = isMobileViewport ? y <= 80 || headerBottom > 8 : y <= 120;
+      const inTopZone = y <= 120 || headerBottom > 8;
+      const revealThreshold = isMobileViewport ? -8 : -6;
+      const hideThreshold = isMobileViewport ? 8 : 10;
 
       if (inTopZone) {
-        clearHideTimer();
-        resetUpwardState();
         setControlVisible(false);
         lastScrollY.current = y;
         lastScrollTs.current = now;
         return;
       }
 
-      if (!isMobileViewport) {
-        if (dy > 8) setControlVisible(false);
-        else if (dy < -6) setControlVisible(true);
-        lastScrollY.current = y;
-        lastScrollTs.current = now;
-        return;
-      }
-
-      const pauseTooLong = now - (lastScrollTs.current || now) > 2200;
-      if (dy < -1) {
-        if (pauseTooLong) resetUpwardState();
-        upwardMs.current += dt;
-        upwardPx.current += Math.abs(dy);
-        if (upwardMs.current >= 2000 || upwardPx.current >= 120) showControl();
-      } else if (dy > 2) {
-        clearHideTimer();
-        resetUpwardState();
+      if (dy >= hideThreshold) {
         setControlVisible(false);
-      } else if (pauseTooLong) {
-        resetUpwardState();
+      } else if (dy <= revealThreshold) {
+        setControlVisible(true);
       }
 
       lastScrollY.current = y;
@@ -207,24 +119,8 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     onScroll();
     return () => {
       window.removeEventListener("scroll", onScroll);
-      clearHideTimer();
     };
   }, [isMobileViewport]);
-
-  async function toggleFollow() {
-    if (!user) {
-      window.location.hash = "#/auth";
-      return;
-    }
-    try {
-      const res = await authFetch("/api/me/follow", {
-        method: "POST",
-        body: JSON.stringify({ type: "manga", targetId: mangaId })
-      });
-      const data = await res.json();
-      if (res.ok) setFollowing(!!data.following);
-    } catch {}
-  }
 
   let images = [];
   if (chapter?.images) {
@@ -262,8 +158,8 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     <div className="app-container">
       <div className={`reader-control-bar ${isMobileViewport ? "mobile" : "desktop"} ${controlVisible ? "show" : ""}`}>
         <div className="reader-control-group">
-          <a className="reader-ctrl-btn ghost" href={`#/read/${mangaId}`}>
-            Muc luc
+          <a className="reader-ctrl-btn ghost" href="#/">
+            Home
           </a>
           <button
             className="reader-ctrl-btn"
@@ -303,9 +199,6 @@ export default function ReadChapterView({ mangaId, chapterId }) {
             }}
           >
             {">"}
-          </button>
-          <button className={`reader-ctrl-follow ${following ? "active" : ""}`} onClick={toggleFollow}>
-            {user ? (following ? "Dang theo doi" : "Theo doi") : "Dang nhap"}
           </button>
         </div>
       </div>
