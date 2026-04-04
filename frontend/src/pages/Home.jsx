@@ -42,6 +42,15 @@ export default function Home() {
 
   return (
     <main className="app-container">
+      <div className="home-browse-links">
+        <a href="#/manga" className="browse-link-btn">
+          📚 Truyện
+        </a>
+        <a href="#/anime" className="browse-link-btn">
+          🎬 Anime
+        </a>
+      </div>
+      
       <div className="layout-home">
         <div className="layout-home-left">
           <Read data={manga} loading={loading} />

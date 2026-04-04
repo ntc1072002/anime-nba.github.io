@@ -10,6 +10,8 @@ import Login from "./pages/Login.jsx";
 import WatchEpisodeView from "./pages/WatchEpisodeView.jsx";
 import Following from "./pages/Following.jsx";
 import MobileBrowse from "./pages/MobileBrowse.jsx";
+import BrowseManga from "./pages/BrowseManga.jsx";
+import BrowseAnime from "./pages/BrowseAnime.jsx";
 
 export default function App() {
   const [route, setRoute] = useState(window.location.hash || "#/" );
@@ -43,6 +45,8 @@ export default function App() {
   let Page = <Home />;
   if (isMobile && (page === "" || page === "manga")) Page = <MobileBrowse type="manga" />;
   else if (isMobile && page === "anime") Page = <MobileBrowse type="anime" />;
+  else if (!isMobile && page === "manga") Page = <BrowseManga />;
+  else if (!isMobile && page === "anime") Page = <BrowseAnime />;
   else if (page === 'admin') Page = <Admin />;
   else if (page === 'following') Page = <Following />;
   else if (page === 'read' && id && sub === 'chapter' && subId) Page = <ReadChapterView mangaId={id} chapterId={subId} />;
