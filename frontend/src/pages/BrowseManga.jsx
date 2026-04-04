@@ -63,9 +63,7 @@ function enrichItem(base, detailItems) {
     return { left, right };
   });
 
-  const primaryHref = firstItem
-    ? `#/read/${base.id}/chapter/${firstItem.id}`
-    : `#/read/${base.id}`;
+  const primaryHref = `#/read/${base.id}`;
 
   return {
     ...base,

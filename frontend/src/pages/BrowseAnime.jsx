@@ -63,9 +63,7 @@ function enrichItem(base, detailItems) {
     return { left, right };
   });
 
-  const primaryHref = firstItem
-    ? `#/watch/${base.id}/episodes/${firstItem.id}`
-    : `#/watch/${base.id}`;
+  const primaryHref = `#/watch/${base.id}`;
 
   return {
     ...base,
