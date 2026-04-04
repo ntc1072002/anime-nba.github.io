@@ -152,8 +152,8 @@ export default function Header() {
 
   const navLinks = useMemo(
     () => [
-      { key: "home", href: "#/", label: "Trang chu" },
-      { key: "following", href: "#/following", label: "Theo doi" }
+      { key: "home", href: "#/", label: "Trang chủ" },
+      { key: "following", href: "#/following", label: "Theo dõi" }
     ],
     []
   );
@@ -186,7 +186,7 @@ export default function Header() {
         <div className="nav-user">
           {!user ? (
             <a href="#/auth" className={`nav-link nav-link-auth ${page === "auth" ? "active" : ""}`}>
-              Dang nhap
+              Đăng nhập
             </a>
           ) : (
             <div className="user-chip" ref={bellRef}>
@@ -201,22 +201,22 @@ export default function Header() {
                 {unreadCount > 0 ? <span className="bell-badge">{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
               </button>
               <button onClick={logout} className="btn secondary">
-                Dang xuat
+                Đang xuất
               </button>
 
               {bellOpen ? (
                 <div className="bell-menu">
                   <div className="bell-menu-head">
-                    <strong>Thong bao</strong>
+                    <strong>Thông báo</strong>
                     <button type="button" className="btn secondary bell-read-all" onClick={markAllAsRead}>
-                      Danh dau da doc
+                      Đánh dấu đã đọc
                     </button>
                   </div>
 
                   {loadingNotifications ? (
-                    <div className="notice">Dang tai thong bao...</div>
+                    <div className="notice">Đang tải thông báo...</div>
                   ) : notifications.length === 0 ? (
-                    <div className="notice">Ban chua co thong bao nao.</div>
+                    <div className="notice">Bạn chưa có thông báo nào.</div>
                   ) : (
                     <div className="bell-list">
                       {notifications.map((item) => (
@@ -226,7 +226,7 @@ export default function Header() {
                           className={`bell-item ${item.read ? "" : "unread"}`}
                           onClick={() => openNotification(item)}
                         >
-                          <div className="bell-item-title">{item.title || "Thong bao moi"}</div>
+                          <div className="bell-item-title">{item.title || "Thông báo mới"}</div>
                           <div className="bell-item-message">{item.message || ""}</div>
                           <div className="bell-item-time">{formatTimeLabel(item.created_at)}</div>
                         </button>

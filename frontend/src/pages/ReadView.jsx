@@ -56,7 +56,7 @@ export default function ReadView({ id }) {
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <h2 className="page-title" style={{ margin: 0, minWidth: 0 }}>{item.title}</h2>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingBottom: 6 }}>
                 <FollowLikeControls id={id} />
               </div>
             </div>
@@ -66,14 +66,14 @@ export default function ReadView({ id }) {
           </div>
         </div>
         <div style={{ marginTop: 12 }}>
-          <h3>Danh sách chương</h3>
+          <h3>Danh sách chapters</h3>
           {chapters.length ? (
             <div className="chapter-grid">
                     {chapters.map(c => (
                       <ChapterLink key={c.id} id={id} c={c} />
                     ))}
             </div>
-          ) : <p className="notice">Chưa có chương nào.</p>}
+          ) : <p className="notice">Chưa có chapter nào.</p>}
         </div>
         <div style={{ marginTop: 12 }}><a className="back-link" href="#/">← Quay lại</a></div>
       </div>

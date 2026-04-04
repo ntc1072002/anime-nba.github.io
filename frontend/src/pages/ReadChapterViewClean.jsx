@@ -175,7 +175,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
               </div>
             </>
           ) : (
-            <p>Không có ảnh cho chương này.</p>
+            <p>Không có ảnh cho chapter này.</p>
           )}
         </div>
 

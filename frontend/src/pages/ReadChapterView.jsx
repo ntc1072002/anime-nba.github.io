@@ -179,7 +179,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   if (loading) {
     return (
       <div className="app-container">
-        <div className="col">Dang tai...</div>
+        <div className="col">Đang tải...</div>
       </div>
     );
   }
@@ -187,7 +187,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   if (!chapter || chapter.error) {
     return (
       <div className="app-container">
-        <div className="col">Khong tim thay chuong.</div>
+        <div className="col">Không tìm thấy chapter.</div>
       </div>
     );
   }
@@ -222,7 +222,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           >
             {chaptersList.map((c) => (
               <option key={c.id} value={String(c.id)}>
-                Chuong {c.number}
+                Chapter {c.number}
                 {c.title ? ` - ${c.title}` : ""}
               </option>
             ))}
@@ -236,12 +236,12 @@ export default function ReadChapterView({ mangaId, chapterId }) {
             onClick={() => {
               if (nextChapter) window.location.hash = `#/read/${mangaId}/chapter/${nextChapter.id}`;
             }}
-            aria-label="Chuong sau"
+            aria-label="Chưong sau"
           >
             {">"}
           </button>
           <button className={`btn-follow ${following ? "active" : ""}`} onClick={toggleFollow}>
-            {user ? (following ? "Dang theo doi" : "Theo doi") : "Dang nhap"}
+            {user ? (following ? "Đang theo dõi" : "Theo dõi") : "Đăng nhập"}
           </button>
         </div>
       </div>
@@ -259,7 +259,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
                   {manga?.title || "Manga"}
                 </a>
                 {" / "}
-                <strong>Chuong {chapter.number}</strong>
+                <strong>Chapter {chapter.number}</strong>
               </div>
               <div className="reader-top-actions">
                 <button
@@ -293,7 +293,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           </>
         ) : (
           <div className="card">
-            <p>Khong co anh cho chuong nay.</p>
+            <p>Không có ảnh cho chapter này.</p>
           </div>
         )}
       </div>

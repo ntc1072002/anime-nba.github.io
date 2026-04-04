@@ -4,7 +4,7 @@ import { API_BASE } from "../config.js";
 export default function Read({ data = [], loading = false }) {
   return (
     <div className="col left">
-      <h2 className="page-title">Doc truyen</h2>
+      <h2 className="page-title">Đọc truyện</h2>
 
       {loading ? (
         <div className="media-skeleton-list">
@@ -17,7 +17,7 @@ export default function Read({ data = [], loading = false }) {
           ))}
         </div>
       ) : data.length === 0 ? (
-        <p className="empty-block">Chua co truyen nao.</p>
+        <p className="empty-block">Chưa có truyện nào.</p>
       ) : (
         data.map((m) => <MangaCard key={m.id} manga={m} />)
       )}
@@ -40,7 +40,7 @@ function MangaCard({ manga }) {
   }, [manga.id]);
 
   const maxDescLength = 150;
-  const rawDesc = manga.description || "Khong co mo ta";
+  const rawDesc = manga.description || "Không có mô tả nào.";
   const isTruncated = rawDesc.length > maxDescLength;
   const truncatedDesc = isTruncated ? `${rawDesc.substring(0, maxDescLength)}...` : rawDesc;
   const orderedChapters = [...chapters].sort((a, b) => Number(a?.number || 0) - Number(b?.number || 0));
@@ -63,16 +63,16 @@ function MangaCard({ manga }) {
             <p className="media-desc">{truncatedDesc}</p>
 
             <div className="media-meta-row">
-              <span>{chapters.length} chuong</span>
+              <span>{chapters.length} chapter</span>
               <div className="media-actions">
                 {isTruncated ? (
                   <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
-                    Chi tiet
+                    Chi tiết
                   </button>
                 ) : null}
                 {firstChapter ? (
                   <a href={readHref} className="primary-link">
-                    Doc truyen
+                    Đọc truyện
                   </a>
                 ) : null}
               </div>
@@ -81,19 +81,19 @@ function MangaCard({ manga }) {
         </div>
 
         {loadingChapters ? (
-          <div className="media-subtle">Dang tai chuong...</div>
+          <div className="media-subtle">Đang tải chương...</div>
         ) : chapters.length === 0 ? (
-          <div className="media-subtle">Chua co chuong nao</div>
+          <div className="media-subtle">Chưa có chương nào</div>
         ) : (
           <div className="chip-list">
             {orderedChapters.slice(0, 6).map((chapter) => (
               <a key={chapter.id} href={`#/read/${manga.id}/chapter/${chapter.id}`} className="chip-link">
-                Chap {chapter.number}
+                Chapter {chapter.number}
               </a>
             ))}
             {chapters.length > 6 ? (
               <a href={`#/read/${manga.id}`} className="chip-link muted">
-                +{chapters.length - 6} chuong khac
+                +{chapters.length - 6} chapter
               </a>
             ) : null}
           </div>

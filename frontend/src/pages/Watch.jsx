@@ -17,7 +17,7 @@ export default function Watch({ data = [], loading = false }) {
           ))}
         </div>
       ) : data.length === 0 ? (
-        <p className="empty-block">Chua co anime nao.</p>
+        <p className="empty-block">Chưa có anime nào.</p>
       ) : (
         data.map((a) => <AnimeCard key={a.id} anime={a} />)
       )}
@@ -40,7 +40,7 @@ function AnimeCard({ anime }) {
   }, [anime.id]);
 
   const maxDescLength = 150;
-  const rawDesc = anime.description || "Khong co mo ta";
+  const rawDesc = anime.description || "Không có mô tả nào.";
   const isTruncated = rawDesc.length > maxDescLength;
   const truncatedDesc = isTruncated ? `${rawDesc.substring(0, maxDescLength)}...` : rawDesc;
 
@@ -64,7 +64,7 @@ function AnimeCard({ anime }) {
               <div className="media-actions">
                 {isTruncated ? (
                   <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
-                    Chi tiet
+                    Chi tiết
                   </button>
                 ) : null}
                 <a href={`#/watch/${anime.id}`} className="primary-link">
@@ -76,19 +76,19 @@ function AnimeCard({ anime }) {
         </div>
 
         {loadingEpisodes ? (
-          <div className="media-subtle">Dang tai tap...</div>
+          <div className="media-subtle">Đang tải tập...</div>
         ) : episodes.length === 0 ? (
-          <div className="media-subtle">Chua co tap nao</div>
+          <div className="media-subtle">Chưa có tập nào</div>
         ) : (
           <div className="chip-list">
             {episodes.slice(0, 6).map((ep) => (
               <a key={ep.id} href={`#/watch/${anime.id}/episodes/${ep.id}`} className="chip-link">
-                Tap {ep.number}
+                Tập {ep.number}
               </a>
             ))}
             {episodes.length > 6 ? (
               <a href={`#/watch/${anime.id}`} className="chip-link muted">
-                +{episodes.length - 6} tap khac
+                +{episodes.length - 6} tập khác
               </a>
             ) : null}
           </div>
@@ -110,7 +110,7 @@ function AnimeCard({ anime }) {
               </div>
             </div>
             <button type="button" className="btn secondary" onClick={() => setShowModal(false)}>
-              Dong
+                
             </button>
           </div>
         </div>
