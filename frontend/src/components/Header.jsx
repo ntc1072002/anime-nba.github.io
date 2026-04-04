@@ -168,76 +168,80 @@ export default function Header() {
       </div>
 
       <nav className="nav-links">
-        {navLinks.map((nav) => (
-          <a key={nav.key} href={nav.href} className={`nav-link ${page === nav.key ? "active" : ""}`}>
-            {nav.label}
-          </a>
-        ))}
+        <div className="nav-main">
+          {navLinks.map((nav) => (
+            <a key={nav.key} href={nav.href} className={`nav-link ${page === nav.key ? "active" : ""}`}>
+              {nav.label}
+            </a>
+          ))}
 
-        {user ? (
-          <div className="bell-wrap" ref={bellRef}>
-            <button type="button" className="bell-button" onClick={toggleBell} aria-label="Thong bao">
-              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.5-.9 2.1L3.4 15A1 1 0 0 0 4 16.7h16a1 1 0 0 0 .6-1.7l-1.7-1.7a3 3 0 0 1-.9-2.1V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.8-2h-5.6A3 3 0 0 0 12 22Z"
-                />
-              </svg>
-              {unreadCount > 0 ? <span className="bell-badge">{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
-            </button>
+          {user && user.role === "admin" ? (
+            <a href="#/admin" className={`nav-link nav-link-admin ${page === "admin" ? "active" : ""}`}>
+              Admin
+            </a>
+          ) : null}
+        </div>
 
-            {bellOpen ? (
-              <div className="bell-menu">
-                <div className="bell-menu-head">
-                  <strong>Thong bao</strong>
-                  <button type="button" className="btn secondary bell-read-all" onClick={markAllAsRead}>
-                    Danh dau da doc
-                  </button>
-                </div>
+        <div className="nav-user">
+          {user ? (
+            <div className="bell-wrap" ref={bellRef}>
+              <button type="button" className="bell-button" onClick={toggleBell} aria-label="Thong bao">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.5-.9 2.1L3.4 15A1 1 0 0 0 4 16.7h16a1 1 0 0 0 .6-1.7l-1.7-1.7a3 3 0 0 1-.9-2.1V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.8-2h-5.6A3 3 0 0 0 12 22Z"
+                  />
+                </svg>
+                {unreadCount > 0 ? <span className="bell-badge">{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
+              </button>
 
-                {loadingNotifications ? (
-                  <div className="notice">Dang tai thong bao...</div>
-                ) : notifications.length === 0 ? (
-                  <div className="notice">Ban chua co thong bao nao.</div>
-                ) : (
-                  <div className="bell-list">
-                    {notifications.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`bell-item ${item.read ? "" : "unread"}`}
-                        onClick={() => openNotification(item)}
-                      >
-                        <div className="bell-item-title">{item.title || "Thong bao moi"}</div>
-                        <div className="bell-item-message">{item.message || ""}</div>
-                        <div className="bell-item-time">{formatTimeLabel(item.created_at)}</div>
-                      </button>
-                    ))}
+              {bellOpen ? (
+                <div className="bell-menu">
+                  <div className="bell-menu-head">
+                    <strong>Thong bao</strong>
+                    <button type="button" className="btn secondary bell-read-all" onClick={markAllAsRead}>
+                      Danh dau da doc
+                    </button>
                   </div>
-                )}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
 
-        {user && user.role === "admin" ? (
-          <a href="#/admin" className={`nav-link nav-link-admin ${page === "admin" ? "active" : ""}`}>
-            Admin
-          </a>
-        ) : null}
+                  {loadingNotifications ? (
+                    <div className="notice">Dang tai thong bao...</div>
+                  ) : notifications.length === 0 ? (
+                    <div className="notice">Ban chua co thong bao nao.</div>
+                  ) : (
+                    <div className="bell-list">
+                      {notifications.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`bell-item ${item.read ? "" : "unread"}`}
+                          onClick={() => openNotification(item)}
+                        >
+                          <div className="bell-item-title">{item.title || "Thong bao moi"}</div>
+                          <div className="bell-item-message">{item.message || ""}</div>
+                          <div className="bell-item-time">{formatTimeLabel(item.created_at)}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
-        {!user ? (
-          <a href="#/auth" className={`nav-link nav-link-auth ${page === "auth" ? "active" : ""}`}>
-            Dang nhap
-          </a>
-        ) : (
-          <div className="user-chip">
-            <span>Hi, {user.username}</span>
-            <button onClick={logout} className="btn secondary">
-              Dang xuat
-            </button>
-          </div>
-        )}
+          {!user ? (
+            <a href="#/auth" className={`nav-link nav-link-auth ${page === "auth" ? "active" : ""}`}>
+              Dang nhap
+            </a>
+          ) : (
+            <div className="user-chip">
+              <span>Hi, {user.username}</span>
+              <button onClick={logout} className="btn secondary">
+                Dang xuat
+              </button>
+            </div>
+          )}
+        </div>
       </nav>
     </header>
   );
