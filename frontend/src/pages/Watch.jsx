@@ -46,56 +46,54 @@ function AnimeCard({ anime }) {
 
   return (
     <>
-      <a href={`#/watch/${anime.id}`} clássName="media-card">
-        <article className="media-card">
-          <div className="media-card-top">
-            <div className="media-poster">
-              {anime.cover_url ? <img src={anime.cover_url} alt={anime.title} /> : <div className="media-poster-empty">No image</div>}
-            </div>
+      <article className="media-card" onClick={() => window.location.href = `#/watch/${anime.id}`}>
+        <div className="media-card-top">
+          <div className="media-poster">
+            {anime.cover_url ? <img src={anime.cover_url} alt={anime.title} /> : <div className="media-poster-empty">No image</div>}
+          </div>
 
-            <div className="media-info">
-              <h3 className="media-title">
-                <a href={`#/watch/${anime.id}`}>{anime.title}</a>
-              </h3>
+          <div className="media-info">
+            <h3 className="media-title">
+              <a href={`#/watch/${anime.id}`}>{anime.title}</a>
+            </h3>
 
-              <p className="media-desc">{truncatedDesc}</p>
+            <p className="media-desc">{truncatedDesc}</p>
 
-              <div className="media-meta-row">
-                <span>{episodes.length} tập</span>
-                <div className="media-actions">
-                  {isTruncated ? (
-                    <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
-                      Chi tiết
-                    </button>
-                  ) : null}
-                  <a href={`#/watch/${anime.id}`} className="primary-link">
-                    Xem phim
-                  </a>
-                </div>
+            <div className="media-meta-row">
+              <span>{episodes.length} tập</span>
+              <div className="media-actions">
+                {isTruncated ? (
+                  <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
+                    Chi tiết
+                  </button>
+                ) : null}
+                <a href={`#/watch/${anime.id}`} className="primary-link">
+                  Xem phim
+                </a>
               </div>
             </div>
           </div>
+        </div>
 
-          {loadingEpisodes ? (
-            <div className="media-subtle">Đang tải tập...</div>
-          ) : episodes.length === 0 ? (
-            <div className="media-subtle">Chưa có tập nào</div>
-          ) : (
-            <div className="chip-list">
-              {episodes.slice(0, 6).map((ep) => (
-                <a key={ep.id} href={`#/watch/${anime.id}/episodes/${ep.id}`} className="chip-link">
-                  Tập {ep.number}
-                </a>
-              ))}
-              {episodes.length > 6 ? (
-                <a href={`#/watch/${anime.id}`} className="chip-link muted">
-                  +{episodes.length - 6} tập khác
-                </a>
-              ) : null}
-            </div>
-          )}
-        </article>
-      </a>
+        {loadingEpisodes ? (
+          <div className="media-subtle">Đang tải tập...</div>
+        ) : episodes.length === 0 ? (
+          <div className="media-subtle">Chưa có tập nào</div>
+        ) : (
+          <div className="chip-list">
+            {episodes.slice(0, 6).map((ep) => (
+              <a key={ep.id} href={`#/watch/${anime.id}/episodes/${ep.id}`} className="chip-link">
+                Tập {ep.number}
+              </a>
+            ))}
+            {episodes.length > 6 ? (
+              <a href={`#/watch/${anime.id}`} className="chip-link muted">
+                +{episodes.length - 6} tập khác
+              </a>
+            ) : null}
+          </div>
+        )}
+      </article>
       {showModal ? (
         <div className="soft-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="soft-modal" onClick={(e) => e.stopPropagation()}>
