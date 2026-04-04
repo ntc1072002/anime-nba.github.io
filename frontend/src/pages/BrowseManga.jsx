@@ -153,6 +153,10 @@ export default function BrowseManga() {
   return (
     <main className="app-container">
       <div className="browse-page">
+        <div className="home-browse-links">
+          <a href="#/manga" className="browse-link-btn active">📚 Truyện</a>
+          <a href="#/anime" className="browse-link-btn">🎬 Anime</a>
+        </div>
         <h1 className="page-title">TRUYỆN</h1>
         
         <div className="browse-filters">

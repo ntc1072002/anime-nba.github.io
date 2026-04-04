@@ -42,7 +42,7 @@ export default function App() {
   const sub = seg[2] || null;
   const subId = seg[3] || null;
 
-  let Page = <Home />;
+  let Page = <BrowseManga />;
   if (isMobile && (page === "" || page === "manga")) Page = <MobileBrowse type="manga" />;
   else if (isMobile && page === "anime") Page = <MobileBrowse type="anime" />;
   else if (!isMobile && page === "manga") Page = <BrowseManga />;

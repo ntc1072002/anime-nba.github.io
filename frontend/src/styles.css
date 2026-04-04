@@ -2242,6 +2242,13 @@ h1, h2, h3, h4 {
   transform: translateY(-2px);
 }
 
+.browse-link-btn.active {
+  background: linear-gradient(135deg, #8b45c8, #ec4899);
+  color: white;
+  border-color: #ec4899;
+  box-shadow: 0 8px 25px rgba(139, 69, 200, 0.4);
+}
+
 .browse-link-btn:active {
   transform: translateY(0);
 }
