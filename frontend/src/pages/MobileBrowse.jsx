@@ -23,13 +23,17 @@ function toMillis(value) {
 function formatRelative(ms) {
   if (!ms) return "";
   const diff = Date.now() - ms;
-  if (diff < 60 * 1000) return "vua xong";
+  if (diff < 60 * 1000) return "vừa xong";
   const minutes = Math.floor(diff / (60 * 1000));
-  if (minutes < 60) return `${minutes} phut truoc`;
+  if (minutes < 60) return `${minutes} phút trước`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} gio truoc`;
+  if (hours < 24) return `${hours} giờ trước`;
   const days = Math.floor(hours / 24);
-  return `${days} ngay truoc`;
+  if (days < 30) return `${days} ngày trước`;
+  const month = Math.floor(days / 30);
+  if (month < 12) return `${month} tháng trước`;
+  const year = Math.floor(month / 12);
+  return `${year} năm trước`;
 }
 
 function pickGenres(item) {
@@ -54,7 +58,7 @@ function enrichItem(base, detailItems, isManga) {
   const firstItem = sortedAsc[0] || null;
   const latestAt = sortedDesc[0] ? Math.max(toMillis(sortedDesc[0].updated_at), toMillis(sortedDesc[0].created_at)) : 0;
   const rows = sortedDesc.slice(0, 3).map((entry) => {
-    const left = `${isManga ? "chapter" : "tap"} ${entry?.number ?? "?"}`;
+    const left = `${isManga ? "Chapter" : "Tập"} ${entry?.number ?? "?"}`;
     const right = formatRelative(Math.max(toMillis(entry?.updated_at), toMillis(entry?.created_at)));
     return { left, right };
   });
@@ -159,7 +163,7 @@ export default function MobileBrowse({ type = "manga" }) {
     <main className="app-container mobile-browse">
       <div className="mobile-switch">
         <a href="#/manga" className={`mobile-switch-btn ${isManga ? "active" : ""}`}>
-          Truyen
+          Truyện
         </a>
         <a href="#/anime" className={`mobile-switch-btn ${!isManga ? "active" : ""}`}>
           Anime
@@ -168,7 +172,7 @@ export default function MobileBrowse({ type = "manga" }) {
 
       <section className="mobile-highlight">
         <div className="mobile-highlight-title">
-          {isManga ? "TRUYEN DE CU" : "ANIME DE CU"} <span aria-hidden="true">›</span>
+          {isManga ? "TRUYỆN ĐỀ CỬ" : "ANIME ĐỀ CỬ"} <span aria-hidden="true">›</span>
         </div>
         {loading ? (
           <div className="mobile-highlight-row">
@@ -181,7 +185,7 @@ export default function MobileBrowse({ type = "manga" }) {
             ))}
           </div>
         ) : featured.length === 0 ? (
-          <div className="mobile-empty">Chua co du lieu.</div>
+          <div className="mobile-empty">Chưa có dữ liệu.</div>
         ) : (
           <div className="mobile-highlight-row">
             {featured.map((item) => {
@@ -191,9 +195,9 @@ export default function MobileBrowse({ type = "manga" }) {
                   <div className="mobile-highlight-poster">
                     {item.cover_url ? <img src={item.cover_url} alt={item.title} /> : <div className="mobile-cover-empty">No image</div>}
                   </div>
-                  <h3>{item.title || "Khong ten"}</h3>
+                  <h3>{item.title || "Không tên"}</h3>
                   <div className="mobile-highlight-meta">
-                    <span>{firstRow?.left || `${item.detailCount || 0} ${isManga ? "chapter" : "tap"}`}</span>
+                    <span>{firstRow?.left || `${item.detailCount || 0} ${isManga ? "Chapter" : "Tập"}`}</span>
                     <span>{firstRow?.right || ""}</span>
                   </div>
                 </a>
