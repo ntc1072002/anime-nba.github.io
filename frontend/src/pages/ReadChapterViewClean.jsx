@@ -180,7 +180,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <a className="back-link" href={`#/read/${mangaId}`}>← Quay lại</a>
+          <button className="back-link" onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>← Quay lại</button>
         </div>
       </div>
     </div>

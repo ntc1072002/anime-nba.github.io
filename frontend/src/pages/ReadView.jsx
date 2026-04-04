@@ -165,9 +165,9 @@ export default function ReadView({ id }) {
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <a className="back-link" href="#/">
+          <button className="back-link" onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>
             {"<"}- Quay lại
-          </a>
+          </button>
         </div>
       </div>
     </div>

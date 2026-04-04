@@ -27,7 +27,7 @@ export default function WatchEpisodeView({ animeId, episodeId }) {
             <iframe src={episode.embed_url} allowFullScreen title={episode.title}></iframe>
           </div>
         </div>
-        <div style={{ marginTop: 12 }}><a href={`#/watch/${animeId}`}>← Quay lại</a></div>
+        <div style={{ marginTop: 12 }}><button onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>← Quay lại</button></div>
       </div>
     </div>
   );

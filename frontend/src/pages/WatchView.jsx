@@ -156,7 +156,7 @@ export default function WatchView({ id }) {
         </div>
 
         <div style={{ marginTop: 12 }}>
-          <a className="back-link" href="#/">← Quay lại</a>
+          <button className="back-link" onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>← Quay lại</button>
         </div>
       </div>
     </div >
