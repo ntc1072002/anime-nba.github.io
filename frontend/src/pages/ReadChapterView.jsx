@@ -37,6 +37,8 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [following, setFollowing] = useState(false);
 
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
+  const lastScrollTime = useRef(Date.now());
+  const upwardStartTime = useRef(null);
   const navRef = useRef(null);
   const navInitTop = useRef(null);
 
@@ -132,19 +134,41 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   useEffect(() => {
     function onScroll() {
       const y = window.scrollY || 0;
+      const now = Date.now();
+      const delta = y - (lastScrollY.current || 0);
 
       if (isMobileViewport) {
         const header = document.querySelector(".site-header");
         const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-        const shouldShow = y > 80 && headerBottom <= 8;
+        const headerHidden = headerBottom <= 8;
+        const pauseTooLong = now - (lastScrollTime.current || now) > 260;
 
-        setNavVisible((prev) => (prev === shouldShow ? prev : shouldShow));
+        if (y <= 80 || !headerHidden) {
+          upwardStartTime.current = null;
+          setNavVisible(false);
+          setNavStuck(false);
+          lastScrollY.current = y;
+          lastScrollTime.current = now;
+          return;
+        }
+
+        if (delta < -2) {
+          if (pauseTooLong || upwardStartTime.current == null) {
+            upwardStartTime.current = now;
+          }
+          const elapsed = now - upwardStartTime.current;
+          if (elapsed >= 2000) setNavVisible(true);
+        } else if (delta > 2) {
+          upwardStartTime.current = null;
+          setNavVisible(false);
+        }
+
         setNavStuck(false);
         lastScrollY.current = y;
+        lastScrollTime.current = now;
         return;
       }
 
-      const delta = y - (lastScrollY.current || 0);
       setNavVisible((prev) => {
         if (delta > 10 && y > 120) return false;
         if (delta < -8 || y <= 120) return true;
@@ -162,6 +186,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       }
 
       lastScrollY.current = y;
+      lastScrollTime.current = now;
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
