@@ -161,8 +161,10 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="brand">
-        <div className="logo" href="#/">
+        <div className="logo">
+          <a href="#/" className="logo-link">
           BT
+          </a>
         </div>
         <div className="brand-copy">
           <h1>Bao Tang Truyen</h1>
