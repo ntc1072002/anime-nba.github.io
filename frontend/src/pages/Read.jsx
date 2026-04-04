@@ -49,57 +49,58 @@ function MangaCard({ manga }) {
 
   return (
     <>
-      <article className="media-card" href={`#/read/${manga.id}`}>
-        <div className="media-card-top">
-          <div className="media-poster">
-            {manga.cover_url ? <img src={manga.cover_url} alt={manga.title} /> : <div className="media-poster-empty">No image</div>}
-          </div>
+      <a href={`#/read/${manga.id}`} className="media-card">
+        <article className="media-card">
+          <div className="media-card-top">
+            <div className="media-poster">
+              {manga.cover_url ? <img src={manga.cover_url} alt={manga.title} /> : <div className="media-poster-empty">No image</div>}
+            </div>
 
-          <div className="media-info">
-            <h3 className="media-title">
-              <a>{manga.title}</a>
-            </h3>
+            <div className="media-info">
+              <h3 className="media-title">
+                <a>{manga.title}</a>
+              </h3>
 
-            <p className="media-desc">{truncatedDesc}</p>
+              <p className="media-desc">{truncatedDesc}</p>
 
-            <div className="media-meta-row">
-              <span>{chapters.length} chapter</span>
-              <div className="media-actions">
-                {isTruncated ? (
-                  <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
-                    Chi tiết
-                  </button>
-                ) : null}
-                {firstChapter ? (
-                  <a href={readHref} className="primary-link">
-                    Đọc truyện
-                  </a>
-                ) : null}
+              <div className="media-meta-row">
+                <span>{chapters.length} chapter</span>
+                <div className="media-actions">
+                  {isTruncated ? (
+                    <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
+                      Chi tiết
+                    </button>
+                  ) : null}
+                  {firstChapter ? (
+                    <a href={readHref} className="primary-link">
+                      Đọc truyện
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {loadingChapters ? (
-          <div className="media-subtle">Đang tải chương...</div>
-        ) : chapters.length === 0 ? (
-          <div className="media-subtle">Chưa có chương nào</div>
-        ) : (
-          <div className="chip-list">
-            {orderedChapters.slice(0, 6).map((chapter) => (
-              <a key={chapter.id} href={`#/read/${manga.id}/chapter/${chapter.id}`} className="chip-link">
-                Chapter {chapter.number}
-              </a>
-            ))}
-            {chapters.length > 6 ? (
-              <a href={`#/read/${manga.id}`} className="chip-link muted">
-                +{chapters.length - 6} chapter
-              </a>
-            ) : null}
-          </div>
-        )}
-      </article>
-
+          {loadingChapters ? (
+            <div className="media-subtle">Đang tải chương...</div>
+          ) : chapters.length === 0 ? (
+            <div className="media-subtle">Chưa có chương nào</div>
+          ) : (
+            <div className="chip-list">
+              {orderedChapters.slice(0, 6).map((chapter) => (
+                <a key={chapter.id} href={`#/read/${manga.id}/chapter/${chapter.id}`} className="chip-link">
+                  Chapter {chapter.number}
+                </a>
+              ))}
+              {chapters.length > 6 ? (
+                <a href={`#/read/${manga.id}`} className="chip-link muted">
+                  +{chapters.length - 6} chapter
+                </a>
+              ) : null}
+            </div>
+          )}
+        </article>
+      </a>
       {showModal ? (
         <div className="soft-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="soft-modal" onClick={(e) => e.stopPropagation()}>
