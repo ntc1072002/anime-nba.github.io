@@ -461,10 +461,55 @@ body {
   gap: 8px;
 }
 
+.reader-mini-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #e8f2ff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.reader-mini-action span {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.reader-mini-action.follow.active {
+  background: rgba(52, 168, 83, 0.22);
+  border-color: rgba(52, 168, 83, 0.55);
+  color: #d9ffe8;
+}
+
+.reader-mini-action.like {
+  min-width: 38px;
+  justify-content: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.reader-mini-action.like.active {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.55);
+  color: #ffd7e0;
+}
+
 @media (max-width:640px) {
   .floating-nav { width: calc(100% - 20px); top: calc(var(--header-offset, 72px) + 6px); padding:8px }
   .nav-select { min-width:120px }
   .nav-button { width:32px; height:32px }
+  .reader-top-actions {
+    flex-wrap: wrap;
+  }
+  .reader-mini-action {
+    min-height: 32px;
+    font-size: 13px;
+  }
 }
 
 /* back link styling */

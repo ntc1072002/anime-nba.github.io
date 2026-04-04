@@ -31,6 +31,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [chaptersList, setChaptersList] = useState([]);
   const [user, setUser] = useState(() => getUserFromToken());
   const [following, setFollowing] = useState(false);
+  const [liked, setLiked] = useState(false);
   const [navVisible, setNavVisible] = useState(false);
   const [navAtHeader, setNavAtHeader] = useState(false);
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
@@ -83,6 +84,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     let mounted = true;
     if (!user) {
       setFollowing(false);
+      setLiked(false);
       return () => {
         mounted = false;
       };
@@ -95,10 +97,15 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         const current = (data.follows || []).some(
           (x) => x.type === "manga" && String(x.target_id) === String(mangaId)
         );
+        const likedCurrent = (data.likes || []).some(
+          (x) => x.type === "manga" && String(x.target_id) === String(mangaId)
+        );
         setFollowing(!!current);
+        setLiked(!!likedCurrent);
       })
       .catch(() => {
         if (mounted) setFollowing(false);
+        if (mounted) setLiked(false);
       });
 
     return () => {
@@ -157,6 +164,21 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       });
       const data = await res.json();
       if (res.ok) setFollowing(!!data.following);
+    } catch {}
+  }
+
+  async function toggleLike() {
+    if (!user) {
+      window.location.hash = "#/auth";
+      return;
+    }
+    try {
+      const res = await authFetch("/api/me/like", {
+        method: "POST",
+        body: JSON.stringify({ type: "manga", targetId: mangaId })
+      });
+      const data = await res.json();
+      if (res.ok) setLiked(!!data.liked);
     } catch {}
   }
 
@@ -262,6 +284,16 @@ export default function ReadChapterView({ mangaId, chapterId }) {
                 <strong>Chapter {chapter.number}</strong>
               </div>
               <div className="reader-top-actions">
+                <button className={`reader-mini-action follow ${following ? "active" : ""}`} onClick={toggleFollow}>
+                  <span aria-hidden="true">+</span> Theo doi
+                </button>
+                <button
+                  className={`reader-mini-action like ${liked ? "active" : ""}`}
+                  onClick={toggleLike}
+                  aria-label="Yeu thich"
+                >
+                  <span aria-hidden="true">{liked ? "❤" : "♡"}</span>
+                </button>
                 <button
                   className="btn secondary"
                   onClick={() => {
