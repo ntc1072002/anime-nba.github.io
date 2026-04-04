@@ -169,7 +169,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
         const headerHidden = headerBottom <= 8;
         const dt = Math.min(500, Math.max(0, now - (lastScrollTime.current || now)));
-        const pauseTooLong = now - (lastScrollTime.current || now) > 1200;
+        const pauseTooLong = now - (lastScrollTime.current || now) > 2200;
 
         if (y <= 80 || !headerHidden) {
           resetUpwardIntent();
@@ -180,7 +180,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           return;
         }
 
-        if (delta < -2) {
+        if (delta < -1) {
           if (pauseTooLong || lastDirection.current !== "up") {
             upwardDuration.current = 0;
             upwardDistance.current = 0;
@@ -188,7 +188,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           upwardDuration.current += dt;
           upwardDistance.current += Math.abs(delta);
           lastDirection.current = "up";
-          if (upwardDuration.current >= 2000 || upwardDistance.current >= 180) {
+          if (upwardDuration.current >= 2000 || upwardDistance.current >= 120) {
             setNavVisible(true);
           }
         } else if (delta > 2) {
@@ -205,9 +205,21 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         return;
       }
 
+      const header = document.querySelector(".site-header");
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      const inHeaderZone = y <= 120 || headerBottom > 8;
+
+      if (inHeaderZone) {
+        setNavVisible(false);
+        setNavStuck(false);
+        lastScrollY.current = y;
+        lastScrollTime.current = now;
+        return;
+      }
+
       setNavVisible((prev) => {
-        if (delta > 10 && y > 120) return false;
-        if (delta < -8 || y <= 120) return true;
+        if (delta > 10) return false;
+        if (delta < -6) return true;
         return prev;
       });
 
@@ -217,7 +229,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       }
 
       if (navInitTop.current != null) {
-        const shouldStuck = y >= Math.max(0, navInitTop.current - 2) && y > 120;
+        const shouldStuck = y >= Math.max(0, navInitTop.current - 2);
         setNavStuck((prev) => (prev === shouldStuck ? prev : shouldStuck));
       }
 
