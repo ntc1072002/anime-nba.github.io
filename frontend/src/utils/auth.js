@@ -36,7 +36,15 @@ async function exchangeFirebaseTokenIfNeeded() {
 export async function authFetch(url, opts = {}) {
   const fullUrl = (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) ? url : `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
   const token = await exchangeFirebaseTokenIfNeeded();
-  const headers = Object.assign({}, opts.headers || {}, token ? { Authorization: `Bearer ${token}` } : {}, { 'Content-Type': 'application/json' });
+  const headers = Object.assign({}, opts.headers || {}, token ? { Authorization: `Bearer ${token}` } : {});
+  const hasBody = opts.body !== undefined && opts.body !== null;
+  const isFormData = typeof FormData !== 'undefined' && opts.body instanceof FormData;
+
+  const hasContentType = headers['Content-Type'] || headers['content-type'];
+  if (hasBody && !isFormData && !hasContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   return fetch(fullUrl, Object.assign({}, opts, { headers }));
 }
 

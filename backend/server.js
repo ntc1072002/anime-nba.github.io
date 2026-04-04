@@ -83,6 +83,105 @@ app.use(express.json());
 
 const upload = multer({ storage: multer.memoryStorage() });
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret';
+const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj || {}, key);
+
+function parsePositiveNumber(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+function chunkArray(items, size) {
+  const out = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+function toIsoDate(value) {
+  if (!value) return null;
+  if (typeof value.toDate === 'function') return value.toDate().toISOString();
+  if (value instanceof Date) return value.toISOString();
+  return null;
+}
+
+function normalizeFirestoreDoc(data) {
+  const out = { ...(data || {}) };
+  const created = toIsoDate(out.created_at);
+  const updated = toIsoDate(out.updated_at);
+  if (created) out.created_at = created;
+  if (updated) out.updated_at = updated;
+  return out;
+}
+
+async function getCollectionItemsByIds(collectionName, ids) {
+  const uniqueIds = Array.from(new Set((ids || []).map((id) => String(id)).filter(Boolean)));
+  const itemMap = new Map();
+
+  for (const group of chunkArray(uniqueIds, 200)) {
+    const refs = group.map((id) => firestore.collection(collectionName).doc(id));
+    if (!refs.length) continue;
+    const docs = await firestore.getAll(...refs);
+    for (const doc of docs) {
+      if (!doc.exists) continue;
+      itemMap.set(doc.id, { id: doc.id, ...normalizeFirestoreDoc(doc.data()) });
+    }
+  }
+
+  return itemMap;
+}
+
+async function createNotificationsForFollowers(payload) {
+  const { type, targetId, event, title, message, metadata } = payload || {};
+  if (!type || !targetId || !event || !title || !message) return 0;
+
+  const followsSnap = await firestore
+    .collection('follows')
+    .where('type', '==', String(type))
+    .where('target_id', '==', String(targetId))
+    .get();
+
+  if (followsSnap.empty) return 0;
+
+  const followerIds = Array.from(
+    new Set(
+      followsSnap.docs
+        .map((d) => d.data()?.user_id)
+        .filter(Boolean)
+        .map((id) => String(id))
+    )
+  );
+
+  const now = new Date();
+  let inserted = 0;
+
+  for (const group of chunkArray(followerIds, 400)) {
+    const batch = firestore.batch();
+    for (const userId of group) {
+      const ref = firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .doc();
+
+      batch.set(ref, {
+        user_id: userId,
+        type: String(type),
+        target_id: String(targetId),
+        event: String(event),
+        title: String(title),
+        message: String(message),
+        metadata: metadata || null,
+        read: false,
+        created_at: now,
+        updated_at: now
+      });
+      inserted += 1;
+    }
+    await batch.commit();
+  }
+
+  return inserted;
+}
 
 // ===== HEALTH CHECK =====
 app.get("/", (req, res) => {
@@ -122,11 +221,15 @@ app.get("/api/anime/:id", async (req, res) => {
 // CREATE anime
 app.post("/api/anime", authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
+    const title = String(req.body.title || '').trim();
+    if (!title) return res.status(400).json({ error: "title required" });
+
     const ref = await firestore.collection('anime').add({
-      title: req.body.title,
-      description: req.body.description || undefined,
+      title,
+      description: req.body.description ? String(req.body.description) : null,
       embed_url: req.body.embed_url || null,
-      created_at: new Date()
+      created_at: new Date(),
+      updated_at: new Date()
     });
     res.status(201).json({ id: ref.id });
   } catch (err) {
@@ -138,13 +241,23 @@ app.post("/api/anime", authenticateJWT, requireRole('admin'), async (req, res) =
 // UPDATE anime
 app.put("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
-    const { title, description, embed_url } = req.body;
-    await firestore.collection('anime').doc(req.params.id).update({
-      title: title || undefined,
-      description: description || undefined,
-      embed_url: embed_url || undefined,
-      updated_at: new Date()
-    });
+    const updates = { updated_at: new Date() };
+
+    if (hasOwn(req.body, 'title')) {
+      const nextTitle = String(req.body.title || '').trim();
+      if (!nextTitle) return res.status(400).json({ error: 'title cannot be empty' });
+      updates.title = nextTitle;
+    }
+
+    if (hasOwn(req.body, 'description')) {
+      updates.description = req.body.description ? String(req.body.description) : null;
+    }
+
+    if (hasOwn(req.body, 'embed_url')) {
+      updates.embed_url = req.body.embed_url ? String(req.body.embed_url) : null;
+    }
+
+    await firestore.collection('anime').doc(req.params.id).update(updates);
     const doc = await firestore.collection('anime').doc(req.params.id).get();
     res.json({ id: req.params.id, ...doc.data() });
   } catch (err) {
@@ -158,9 +271,7 @@ app.delete("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, 
   try {
     // Delete all episodes first
     const episodesSnap = await firestore.collection('anime').doc(req.params.id).collection('episodes').get();
-    for (const epiDoc of episodesSnap.docs) {
-      await epiDoc.ref.delete();
-    }
+    await Promise.all(episodesSnap.docs.map((epiDoc) => epiDoc.ref.delete()));
     // Delete anime
     await firestore.collection('anime').doc(req.params.id).delete();
     res.json({ success: true });
@@ -350,10 +461,14 @@ app.get('/api/manga', async (_, res) => {
 
 
 app.post('/api/manga', authenticateJWT, requireRole('admin'), async (req, res) => {
+  const title = String(req.body.title || '').trim();
+  if (!title) return res.status(400).json({ error: 'title required' });
+
   const ref = await firestore.collection('manga').add({
-    title: req.body.title,
+    title,
     description: req.body.description || null,
-    created_at: new Date()
+    created_at: new Date(),
+    updated_at: new Date()
   });
   res.status(201).json({ id: ref.id });
 });
@@ -361,13 +476,30 @@ app.post('/api/manga', authenticateJWT, requireRole('admin'), async (req, res) =
 // UPDATE manga
 app.put('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
-    const { title, description } = req.body;
-    await firestore.collection('manga').doc(req.params.id).update({
-      title: title || undefined,
-      description: description || undefined,
-      updated_at: new Date()
-    });
+    const updates = { updated_at: new Date() };
+
+    if (hasOwn(req.body, 'title')) {
+      const nextTitle = String(req.body.title || '').trim();
+      if (!nextTitle) return res.status(400).json({ error: 'title cannot be empty' });
+      updates.title = nextTitle;
+    }
+
+    if (hasOwn(req.body, 'description')) {
+      updates.description = req.body.description ? String(req.body.description) : null;
+    }
+
+    await firestore.collection('manga').doc(req.params.id).update(updates);
     const doc = await firestore.collection('manga').doc(req.params.id).get();
+
+    const mangaTitle = doc.data()?.title || 'Truyen';
+    createNotificationsForFollowers({
+      type: 'manga',
+      targetId: req.params.id,
+      event: 'manga_updated',
+      title: `${mangaTitle} vua duoc cap nhat`,
+      message: `Noi dung cua ${mangaTitle} da co thay doi moi.`
+    }).catch((notifyErr) => console.error('Notify manga update error', notifyErr));
+
     res.json({ id: req.params.id, ...doc.data() });
   } catch (err) {
     console.error('PUT /api/manga/:id error', err);
@@ -380,9 +512,7 @@ app.delete('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, 
   try {
     // Delete all chapters and images first
     const chaptersSnap = await firestore.collection('manga').doc(req.params.id).collection('chapters').get();
-    for (const chapDoc of chaptersSnap.docs) {
-      await chapDoc.ref.delete();
-    }
+    await Promise.all(chaptersSnap.docs.map((chapDoc) => chapDoc.ref.delete()));
     // Delete manga
     await firestore.collection('manga').doc(req.params.id).delete();
     res.json({ success: true });
@@ -393,22 +523,12 @@ app.delete('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, 
 });
 
 /* ================== CHAPTERS ================== */
-app.get('/api/manga/:id/chapters', async (req, res) => {
-  const snap = await firestore
-    .collection('manga')
-    .doc(req.params.id)
-    .collection('chapters')
-    .orderBy('number')
-    .get();
-
-
-  res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-});
-
-
 app.post('/api/manga/:id/chapters', authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
     console.log('POST /api/manga/:id/chapters body:', JSON.stringify(req.body).slice(0, 2000));
+    const chapterNumber = parsePositiveNumber(req.body.number);
+    if (!chapterNumber) return res.status(400).json({ error: 'number must be a positive number' });
+
     // accept images array from client when creating a chapter
     let incoming = [];
     if (Array.isArray(req.body.images) && req.body.images.length) {
@@ -421,39 +541,51 @@ app.post('/api/manga/:id/chapters', authenticateJWT, requireRole('admin'), async
     const chaptersRef = firestore.collection('manga').doc(req.params.id).collection('chapters');
 
     // if a chapter with the same number already exists, append incoming data to it
-    if (req.body.number != null) {
-      const q = await chaptersRef.where('number', '==', Number(req.body.number)).limit(1).get();
-      if (!q.empty) {
-        const doc = q.docs[0];
-        const data = doc.data() || {};
-        const existing = Array.isArray(data.images) ? data.images.slice() : [];
+    const q = await chaptersRef.where('number', '==', chapterNumber).limit(1).get();
+    if (!q.empty) {
+      const doc = q.docs[0];
+      const data = doc.data() || {};
+      const existing = Array.isArray(data.images) ? data.images.slice() : [];
 
-        // determine starting order for appended images
-        const maxOrder = existing.reduce((m, x) => Math.max(m, Number(x.order) || 0), 0);
-        const appended = incoming.map((it, idx) => ({ order: maxOrder + idx + 1, url: it.url }));
+      // determine starting order for appended images
+      const maxOrder = existing.reduce((m, x) => Math.max(m, Number(x.order) || 0), 0);
+      const appended = incoming.map((it, idx) => ({ order: maxOrder + idx + 1, url: it.url }));
 
-        const newImages = existing.concat(appended);
+      const newImages = existing.concat(appended);
 
-        // update title if provided
-        const newTitle = req.body.title || data.title || null;
+      // update title if provided
+      const newTitle = req.body.title || data.title || null;
 
-        await chaptersRef.doc(doc.id).update({
-          images: newImages,
-          title: newTitle,
-          updated_at: new Date()
-        });
+      await chaptersRef.doc(doc.id).update({
+        images: newImages,
+        title: newTitle,
+        updated_at: new Date()
+      });
 
-        return res.status(200).json({ id: doc.id, merged: true });
-      }
+      return res.status(200).json({ id: doc.id, merged: true });
     }
 
     // otherwise create a new chapter document
     const ref = await chaptersRef.add({
-      number: req.body.number,
+      number: chapterNumber,
       title: req.body.title || null,
       images: incoming,
-      created_at: new Date()
+      created_at: new Date(),
+      updated_at: new Date()
     });
+
+    const mangaDoc = await firestore.collection('manga').doc(req.params.id).get();
+    const mangaTitle = mangaDoc.data()?.title || 'Truyen';
+    const chapterLabel = req.body.title ? `Chuong ${chapterNumber} - ${req.body.title}` : `Chuong ${chapterNumber}`;
+
+    createNotificationsForFollowers({
+      type: 'manga',
+      targetId: req.params.id,
+      event: 'chapter_added',
+      title: `${mangaTitle} co chuong moi`,
+      message: `${chapterLabel} vua duoc dang.`,
+      metadata: { chapterId: ref.id, chapterNumber }
+    }).catch((notifyErr) => console.error('Notify chapter added error', notifyErr));
 
     res.status(201).json({ id: ref.id });
   } catch (err) {
@@ -466,17 +598,28 @@ app.post('/api/manga/:id/chapters', authenticateJWT, requireRole('admin'), async
 app.put('/api/manga/:id/chapters/:cid', authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
     const { number, title, images } = req.body;
+    const updates = { updated_at: new Date() };
+
+    if (hasOwn(req.body, 'number')) {
+      const parsedNumber = parsePositiveNumber(number);
+      if (!parsedNumber) return res.status(400).json({ error: 'number must be a positive number' });
+      updates.number = parsedNumber;
+    }
+
+    if (hasOwn(req.body, 'title')) {
+      updates.title = title ? String(title) : null;
+    }
+
+    if (hasOwn(req.body, 'images')) {
+      updates.images = Array.isArray(images) ? images : [];
+    }
+
     await firestore
       .collection('manga')
       .doc(req.params.id)
       .collection('chapters')
       .doc(req.params.cid)
-      .update({
-        number: number || undefined,
-        title: title || undefined,
-        images: images || undefined,
-        updated_at: new Date()
-      });
+      .update(updates);
     const doc = await firestore
       .collection('manga')
       .doc(req.params.id)
@@ -592,8 +735,10 @@ app.get('/api/me', authenticateJWT, async (req, res) => {
     if (!userDoc.exists) return res.status(404).json({ error: 'not found' });
     const user = { id: userDoc.id, ...userDoc.data() };
 
-    const followsSnap = await firestore.collection('follows').where('user_id', '==', uid).get();
-    const likesSnap = await firestore.collection('likes').where('user_id', '==', uid).get();
+    const [followsSnap, likesSnap] = await Promise.all([
+      firestore.collection('follows').where('user_id', '==', uid).get(),
+      firestore.collection('likes').where('user_id', '==', uid).get()
+    ]);
 
     const follows = followsSnap.docs.map(d => d.data());
     const likes = likesSnap.docs.map(d => d.data());
@@ -601,6 +746,193 @@ app.get('/api/me', authenticateJWT, async (req, res) => {
     res.json({ user, follows, likes });
   } catch (err) {
     console.error('GET /api/me error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+// Current user's followed/liked library, grouped by manga and anime
+app.get('/api/me/library', authenticateJWT, async (req, res) => {
+  try {
+    const uid = req.user.id;
+    const limitPerType = Math.min(Math.max(parsePositiveNumber(req.query.limit) || 100, 1), 300);
+
+    const [followsSnap, likesSnap] = await Promise.all([
+      firestore.collection('follows').where('user_id', '==', uid).get(),
+      firestore.collection('likes').where('user_id', '==', uid).get()
+    ]);
+
+    const followSet = {
+      manga: new Set(),
+      anime: new Set()
+    };
+    const likeSet = {
+      manga: new Set(),
+      anime: new Set()
+    };
+
+    for (const doc of followsSnap.docs) {
+      const row = doc.data() || {};
+      const t = row.type === 'anime' ? 'anime' : row.type === 'manga' ? 'manga' : null;
+      if (!t) continue;
+      followSet[t].add(String(row.target_id));
+    }
+
+    for (const doc of likesSnap.docs) {
+      const row = doc.data() || {};
+      const t = row.type === 'anime' ? 'anime' : row.type === 'manga' ? 'manga' : null;
+      if (!t) continue;
+      likeSet[t].add(String(row.target_id));
+    }
+
+    const mangaIds = Array.from(new Set([...followSet.manga, ...likeSet.manga])).slice(0, limitPerType);
+    const animeIds = Array.from(new Set([...followSet.anime, ...likeSet.anime])).slice(0, limitPerType);
+
+    const [mangaMap, animeMap] = await Promise.all([
+      getCollectionItemsByIds('manga', mangaIds),
+      getCollectionItemsByIds('anime', animeIds)
+    ]);
+
+    const mapItems = (ids, follows, likes, sourceMap) =>
+      ids
+        .map((id) => {
+          const item = sourceMap.get(id);
+          if (!item) return null;
+          return {
+            ...item,
+            following: follows.has(id),
+            liked: likes.has(id)
+          };
+        })
+        .filter(Boolean);
+
+    const manga = mapItems(mangaIds, followSet.manga, likeSet.manga, mangaMap);
+    const anime = mapItems(animeIds, followSet.anime, likeSet.anime, animeMap);
+
+    res.json({
+      manga,
+      anime,
+      stats: {
+        manga: { follow: followSet.manga.size, like: likeSet.manga.size, total: manga.length },
+        anime: { follow: followSet.anime.size, like: likeSet.anime.size, total: anime.length }
+      }
+    });
+  } catch (err) {
+    console.error('GET /api/me/library error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+// Notifications: unread count (for bell badge)
+app.get('/api/me/notifications/unread-count', authenticateJWT, async (req, res) => {
+  try {
+    const uid = req.user.id;
+    const ref = firestore.collection('users').doc(uid).collection('notifications');
+
+    let unread = 0;
+    try {
+      const countSnap = await ref.where('read', '==', false).count().get();
+      unread = countSnap.data().count || 0;
+    } catch {
+      const fallback = await ref.where('read', '==', false).get();
+      unread = fallback.size;
+    }
+
+    res.json({ unread });
+  } catch (err) {
+    console.error('GET /api/me/notifications/unread-count error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+// Notifications: list with cursor pagination
+app.get('/api/me/notifications', authenticateJWT, async (req, res) => {
+  try {
+    const uid = req.user.id;
+    const limit = Math.min(Math.max(parsePositiveNumber(req.query.limit) || 12, 1), 50);
+    const cursor = Number(req.query.cursor);
+    const hasCursor = Number.isFinite(cursor) && cursor > 0;
+
+    let query = firestore
+      .collection('users')
+      .doc(uid)
+      .collection('notifications')
+      .orderBy('created_at', 'desc');
+
+    if (hasCursor) query = query.where('created_at', '<', new Date(cursor));
+
+    const snap = await query.limit(limit + 1).get();
+    const docs = snap.docs;
+    const hasMore = docs.length > limit;
+    const pageDocs = hasMore ? docs.slice(0, limit) : docs;
+
+    const notifications = pageDocs.map((doc) => {
+      const data = doc.data() || {};
+      return {
+        id: doc.id,
+        ...normalizeFirestoreDoc(data),
+        read: !!data.read,
+        created_at: toIsoDate(data.created_at),
+        updated_at: toIsoDate(data.updated_at),
+        read_at: toIsoDate(data.read_at)
+      };
+    });
+
+    let nextCursor = null;
+    if (hasMore && pageDocs.length) {
+      const tail = pageDocs[pageDocs.length - 1].data()?.created_at;
+      if (tail && typeof tail.toMillis === 'function') nextCursor = tail.toMillis();
+      else if (tail instanceof Date) nextCursor = tail.getTime();
+    }
+
+    res.json({ notifications, nextCursor, hasMore });
+  } catch (err) {
+    console.error('GET /api/me/notifications error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+// Notifications: mark all as read
+app.patch('/api/me/notifications/read-all', authenticateJWT, async (req, res) => {
+  try {
+    const uid = req.user.id;
+    const ref = firestore.collection('users').doc(uid).collection('notifications');
+    const now = new Date();
+    let total = 0;
+
+    while (true) {
+      const unreadSnap = await ref.where('read', '==', false).limit(400).get();
+      if (unreadSnap.empty) break;
+
+      const batch = firestore.batch();
+      for (const d of unreadSnap.docs) {
+        batch.update(d.ref, { read: true, read_at: now, updated_at: now });
+      }
+      await batch.commit();
+      total += unreadSnap.size;
+      if (unreadSnap.size < 400) break;
+    }
+
+    res.json({ success: true, marked: total });
+  } catch (err) {
+    console.error('PATCH /api/me/notifications/read-all error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+// Notifications: mark one as read
+app.patch('/api/me/notifications/:notificationId/read', authenticateJWT, async (req, res) => {
+  try {
+    const uid = req.user.id;
+    const notificationId = req.params.notificationId;
+    const ref = firestore.collection('users').doc(uid).collection('notifications').doc(notificationId);
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ error: 'not found' });
+
+    const now = new Date();
+    await ref.update({ read: true, read_at: now, updated_at: now });
+    res.json({ success: true, id: notificationId });
+  } catch (err) {
+    console.error('PATCH /api/me/notifications/:notificationId/read error', err);
     res.status(500).json({ error: 'internal' });
   }
 });
@@ -747,16 +1079,34 @@ app.post('/api/anime/:id/cover', authenticateJWT, requireRole('admin'), upload.s
 // CREATE episode (already used by admin form but ensure exists)
 app.post('/api/anime/:id/episodes', authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
+    const episodeNumber = parsePositiveNumber(req.body.number);
+    if (!episodeNumber) return res.status(400).json({ error: 'number must be a positive number' });
+
     const ref = await firestore
       .collection('anime')
       .doc(req.params.id)
       .collection('episodes')
       .add({
-        number: req.body.number,
+        number: episodeNumber,
         title: req.body.title || null,
         embed_url: req.body.embed_url || null,
-        created_at: new Date()
+        created_at: new Date(),
+        updated_at: new Date()
       });
+
+    const animeDoc = await firestore.collection('anime').doc(req.params.id).get();
+    const animeTitle = animeDoc.data()?.title || 'Anime';
+    const episodeLabel = req.body.title ? `Tap ${episodeNumber} - ${req.body.title}` : `Tap ${episodeNumber}`;
+
+    createNotificationsForFollowers({
+      type: 'anime',
+      targetId: req.params.id,
+      event: 'episode_added',
+      title: `${animeTitle} co tap moi`,
+      message: `${episodeLabel} vua duoc cap nhat.`,
+      metadata: { episodeId: ref.id, episodeNumber }
+    }).catch((notifyErr) => console.error('Notify episode added error', notifyErr));
+
     res.status(201).json({ id: ref.id });
   } catch (err) {
     console.error('POST /api/anime/:id/episodes error', err);
@@ -768,17 +1118,28 @@ app.post('/api/anime/:id/episodes', authenticateJWT, requireRole('admin'), async
 app.put('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('admin'), async (req, res) => {
   try {
     const { number, title, embed_url } = req.body;
+    const updates = { updated_at: new Date() };
+
+    if (hasOwn(req.body, 'number')) {
+      const parsedNumber = parsePositiveNumber(number);
+      if (!parsedNumber) return res.status(400).json({ error: 'number must be a positive number' });
+      updates.number = parsedNumber;
+    }
+
+    if (hasOwn(req.body, 'title')) {
+      updates.title = title ? String(title) : null;
+    }
+
+    if (hasOwn(req.body, 'embed_url')) {
+      updates.embed_url = embed_url ? String(embed_url) : null;
+    }
+
     await firestore
       .collection('anime')
       .doc(req.params.id)
       .collection('episodes')
       .doc(req.params.eid)
-      .update({
-        number: number || undefined,
-        title: title || undefined,
-        embed_url: embed_url || undefined,
-        updated_at: new Date()
-      });
+      .update(updates);
     const doc = await firestore
       .collection('anime')
       .doc(req.params.id)

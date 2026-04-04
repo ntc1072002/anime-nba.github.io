@@ -250,7 +250,7 @@ export default function Admin() {
 
               <div className="form-actions">
                 <button className="btn" type="submit">Thêm {type}</button>
-                <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setEmbedUrl(""); setCoverFile(null); setStatus(null); setCoverFile(null); setEpisodeImagesList([{ url: '', order: 1 }]); }}>Reset</button>
+                <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setEmbedUrl(""); setCoverFile(null); setStatus(null); }}>Reset</button>
                 <div style={{ flex: 1 }} />
                 {status && (
                   <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88" }}>{status.msg}</div>
@@ -384,7 +384,7 @@ export default function Admin() {
                               <button className="btn secondary" onClick={async () => {
                                 if (!confirm('Xóa tập này?')) return;
                                 try {
-                                  const res = await authFetch(`${API_BASE}/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
+                                  const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
                                   if (!res.ok) throw new Error('Failed');
                                   fetchEpisodes(targetAnimeId);
                                 } catch (err) { alert(err.message); }

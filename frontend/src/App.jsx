@@ -8,6 +8,7 @@ import WatchView from "./pages/WatchView.jsx";
 import ReadChapterView from "./pages/ReadChapterView.jsx";
 import Login from "./pages/Login.jsx";
 import WatchEpisodeView from "./pages/WatchEpisodeView.jsx";
+import Following from "./pages/Following.jsx";
 
 export default function App() {
   const [route, setRoute] = useState(window.location.hash || "#/" );
@@ -27,10 +28,11 @@ export default function App() {
 
   let Page = <Home />;
   if (page === 'admin') Page = <Admin />;
+  else if (page === 'following') Page = <Following />;
   else if (page === 'read' && id && sub === 'chapter' && subId) Page = <ReadChapterView mangaId={id} chapterId={subId} />;
   else if (page === 'read' && id) Page = <ReadView id={id} />;
   else if (page === 'auth') Page = <Login />;
-  else if (page === 'watch' && id && sub === 'episode' && subId) Page = <WatchEpisodeView animeId={id} episodeId={subId} />;
+  else if (page === 'watch' && id && (sub === 'episode' || sub === 'episodes') && subId) Page = <WatchEpisodeView animeId={id} episodeId={subId} />;
   else if (page === 'watch' && id) Page = <WatchView id={id} />;
 
   return (

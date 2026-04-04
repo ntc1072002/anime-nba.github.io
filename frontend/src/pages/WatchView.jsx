@@ -132,10 +132,10 @@ export default function WatchView({ id }) {
         <div style={{ marginTop: 12 }}>
           <h3>Danh sách tập</h3>
           <div className="episode-list">
-            <div class="left">
+            <div className="left">
               <img src={item.cover_url} alt={item.title} style={{ width: '100%', display: "flex", height: 'auto', maxHeight: 200, objectFit: 'cover', borderRadius: 6 }} />
             </div>
-            <div class="right">
+            <div className="right">
               <div className="episode-row">
                 {episodes.map(ep => (
                   <a
