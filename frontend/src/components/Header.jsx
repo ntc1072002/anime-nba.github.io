@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { authFetch, getUserFromToken, signOut } from "../utils/auth.js";
 
 function formatTimeLabel(value) {
@@ -30,8 +30,15 @@ function notificationHref(item) {
   return "#/";
 }
 
+function currentPageFromHash() {
+  const hash = window.location.hash || "#/";
+  const page = hash.replace(/^#\//, "").split("/")[0];
+  return page || "home";
+}
+
 export default function Header() {
   const [user, setUser] = useState(null);
+  const [page, setPage] = useState(() => currentPageFromHash());
   const [unreadCount, setUnreadCount] = useState(0);
   const [bellOpen, setBellOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -39,15 +46,16 @@ export default function Header() {
   const bellRef = useRef(null);
 
   useEffect(() => {
-    function syncUser() {
+    function sync() {
       setUser(getUserFromToken());
+      setPage(currentPageFromHash());
     }
-    syncUser();
-    window.addEventListener("hashchange", syncUser);
-    window.addEventListener("storage", syncUser);
+    sync();
+    window.addEventListener("hashchange", sync);
+    window.addEventListener("storage", sync);
     return () => {
-      window.removeEventListener("hashchange", syncUser);
-      window.removeEventListener("storage", syncUser);
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("storage", sync);
     };
   }, []);
 
@@ -70,7 +78,6 @@ export default function Header() {
 
     loadUnreadCount();
     const timer = window.setInterval(loadUnreadCount, 30000);
-
     return () => {
       mounted = false;
       window.clearInterval(timer);
@@ -142,19 +149,30 @@ export default function Header() {
     window.location.reload();
   }
 
+  const navLinks = useMemo(
+    () => [
+      { key: "home", href: "#/", label: "Trang chu" },
+      { key: "following", href: "#/following", label: "Theo doi" }
+    ],
+    []
+  );
+
   return (
     <header className="site-header">
       <div className="brand">
         <div className="logo">BT</div>
-        <div>
+        <div className="brand-copy">
           <h1>Bao Tang Truyen</h1>
-          <div style={{ fontSize: 12, color: "var(--muted)" }}>Ngoi nha cua truyen va anime</div>
+          <div className="brand-subtitle">Doc truyen va xem anime theo cach nhe nhang hon</div>
         </div>
       </div>
 
       <nav className="nav-links">
-        <a href="#/">Trang chu</a>
-        <a href="#/following">Theo doi</a>
+        {navLinks.map((nav) => (
+          <a key={nav.key} href={nav.href} className={`nav-link ${page === nav.key ? "active" : ""}`}>
+            {nav.label}
+          </a>
+        ))}
 
         {user ? (
           <div className="bell-wrap" ref={bellRef}>
@@ -203,22 +221,22 @@ export default function Header() {
         ) : null}
 
         {user && user.role === "admin" ? (
-          <a href="#/admin" style={{ marginLeft: 18, fontWeight: 600, color: "white" }}>
+          <a href="#/admin" className={`nav-link nav-link-admin ${page === "admin" ? "active" : ""}`}>
             Admin
           </a>
         ) : null}
 
         {!user ? (
-          <a href="#/auth" style={{ marginLeft: 18 }}>
+          <a href="#/auth" className={`nav-link nav-link-auth ${page === "auth" ? "active" : ""}`}>
             Dang nhap
           </a>
         ) : (
-          <>
-            <span style={{ marginLeft: 12, color: "var(--muted)" }}>Hi, {user.username}</span>
-            <button onClick={logout} className="btn secondary" style={{ marginLeft: 12 }}>
+          <div className="user-chip">
+            <span>Hi, {user.username}</span>
+            <button onClick={logout} className="btn secondary">
               Dang xuat
             </button>
-          </>
+          </div>
         )}
       </nav>
     </header>
