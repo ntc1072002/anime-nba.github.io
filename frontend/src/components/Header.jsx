@@ -201,7 +201,7 @@ export default function Header() {
                 {unreadCount > 0 ? <span className="bell-badge">{unreadCount > 99 ? "99+" : unreadCount}</span> : null}
               </button>
               <button onClick={logout} className="btn secondary">
-                Đang xuất
+                Đăng xuất
               </button>
 
               {bellOpen ? (
