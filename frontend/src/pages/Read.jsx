@@ -49,7 +49,7 @@ function MangaCard({ manga }) {
 
   return (
     <>
-      <article className="media-card">
+      <article className="media-card" href={`#/read/${manga.id}`}>
         <div className="media-card-top">
           <div className="media-poster">
             {manga.cover_url ? <img src={manga.cover_url} alt={manga.title} /> : <div className="media-poster-empty">No image</div>}
@@ -57,7 +57,7 @@ function MangaCard({ manga }) {
 
           <div className="media-info">
             <h3 className="media-title">
-              <a href={`#/read/${manga.id}`}>{manga.title}</a>
+              <a>{manga.title}</a>
             </h3>
 
             <p className="media-desc">{truncatedDesc}</p>
