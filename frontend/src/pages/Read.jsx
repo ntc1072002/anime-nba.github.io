@@ -43,6 +43,9 @@ function MangaCard({ manga }) {
   const rawDesc = manga.description || "Khong co mo ta";
   const isTruncated = rawDesc.length > maxDescLength;
   const truncatedDesc = isTruncated ? `${rawDesc.substring(0, maxDescLength)}...` : rawDesc;
+  const orderedChapters = [...chapters].sort((a, b) => Number(a?.number || 0) - Number(b?.number || 0));
+  const firstChapter = orderedChapters[0] || null;
+  const readHref = firstChapter ? `#/read/${manga.id}/chapter/${firstChapter.id}` : `#/read/${manga.id}`;
 
   return (
     <>
@@ -61,11 +64,18 @@ function MangaCard({ manga }) {
 
             <div className="media-meta-row">
               <span>{chapters.length} chuong</span>
-              {isTruncated ? (
-                <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
-                  Chi tiet
-                </button>
-              ) : null}
+              <div className="media-actions">
+                {isTruncated ? (
+                  <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
+                    Chi tiet
+                  </button>
+                ) : null}
+                {firstChapter ? (
+                  <a href={readHref} className="primary-link">
+                    Doc truyen
+                  </a>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
@@ -76,7 +86,7 @@ function MangaCard({ manga }) {
           <div className="media-subtle">Chua co chuong nao</div>
         ) : (
           <div className="chip-list">
-            {chapters.slice(0, 6).map((chapter) => (
+            {orderedChapters.slice(0, 6).map((chapter) => (
               <a key={chapter.id} href={`#/read/${manga.id}/chapter/${chapter.id}`} className="chip-link">
                 Chap {chapter.number}
               </a>
