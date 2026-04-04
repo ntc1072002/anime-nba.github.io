@@ -2331,7 +2331,7 @@ h1, h2, h3, h4 {
 
 .browse-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
 }
 
@@ -2436,7 +2436,7 @@ h1, h2, h3, h4 {
 
 @media (max-width: 1024px) {
   .browse-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 12px;
   }
 
@@ -2471,7 +2471,7 @@ h1, h2, h3, h4 {
   }
 
   .browse-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 10px;
   }
 
