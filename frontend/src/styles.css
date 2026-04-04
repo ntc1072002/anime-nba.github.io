@@ -2341,10 +2341,12 @@ h1, h2, h3, h4 {
   color: inherit;
   text-decoration: none;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(95, 183, 247, 0.15);
+  background: rgba(95, 183, 247, 0.02);
   overflow: hidden;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+  padding: 12px;
+  gap: 10px;
 }
 
 .browse-card:hover {
@@ -2359,8 +2361,9 @@ h1, h2, h3, h4 {
   border-radius: 10px;
   overflow: hidden;
   background: #111b2c;
-  border: 1px solid rgba(255,255,255,0.08);
-  margin-bottom: 10px;
+  border: 1.5px solid rgba(95, 183, 247, 0.25);
+  margin-bottom: 0;
+  box-shadow: 0 2px 8px rgba(8, 18, 30, 0.15);
 }
 
 .browse-poster img {
@@ -2381,7 +2384,8 @@ h1, h2, h3, h4 {
 }
 
 .browse-title {
-  margin: 0 0 6px 0;
+  margin: 0;
+  padding: 8px 10px;
   font-size: 16px;
   line-height: 1.3;
   color: #f1f7ff;
@@ -2391,15 +2395,22 @@ h1, h2, h3, h4 {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  border: 1px solid rgba(95, 183, 247, 0.12);
+  border-radius: 8px;
+  background: rgba(95, 183, 247, 0.03);
 }
 
 .browse-meta {
   display: flex;
   justify-content: space-between;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 0;
+  padding: 8px 10px;
   font-size: 12px;
   color: #b1c3db;
+  border: 1px solid rgba(123, 216, 201, 0.12);
+  border-radius: 8px;
+  background: rgba(123, 216, 201, 0.03);
 }
 
 .browse-time {
@@ -2410,6 +2421,7 @@ h1, h2, h3, h4 {
 
 .browse-genres {
   margin: 0;
+  padding: 8px 10px;
   font-size: 11px;
   color: #9fb3cf;
   display: -webkit-box;
@@ -2417,6 +2429,9 @@ h1, h2, h3, h4 {
   line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  border: 1px solid rgba(139, 69, 200, 0.12);
+  border-radius: 8px;
+  background: rgba(139, 69, 200, 0.03);
 }
 
 @media (max-width: 1024px) {
