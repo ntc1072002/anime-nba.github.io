@@ -108,11 +108,11 @@ function MangaCard({ manga }) {
               <div>
                 <h2>{manga.title}</h2>
                 <p>{rawDesc}</p>
-                <div className="soft-modal-meta">{chapters.length} chuong</div>
+                <div className="soft-modal-meta">{chapters.length} chapters</div>
               </div>
             </div>
             <button type="button" className="btn secondary" onClick={() => setShowModal(false)}>
-              Dong
+              Đóng
             </button>
           </div>
         </div>

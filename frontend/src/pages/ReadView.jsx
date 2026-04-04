@@ -46,16 +46,16 @@ function formatRelativeTime(value) {
   if (!ms) return "";
   const diff = Math.max(0, Date.now() - ms);
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "vua xong";
-  if (mins < 60) return `${mins} phut truoc`;
+  if (mins < 1) return "vừa xong";
+  if (mins < 60) return `${mins} phút trước`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} gio truoc`;
+  if (hours < 24) return `${hours} giờ trước`;
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} ngay truoc`;
+  if (days < 30) return `${days} ngày trước`;
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months} thang truoc`;
+  if (months < 12) return `${months} tháng trước`;
   const years = Math.floor(months / 12);
-  return `${years} nam truoc`;
+  return `${years} năm trước`;
 }
 
 export default function ReadView({ id }) {
@@ -148,7 +148,7 @@ export default function ReadView({ id }) {
             <section className="chapter-table-panel">
               <header className="chapter-table-head">
                 <span className="chapter-table-icon" aria-hidden="true" />
-                <h3>Danh sach chuong</h3>
+                <h3>Danh sách chương</h3>
               </header>
               <div className="chapter-table-list">
                 {orderedChapters.map((c) => (
@@ -158,15 +158,15 @@ export default function ReadView({ id }) {
             </section>
           ) : (
             <>
-              <h3>Danh sach chuong</h3>
-              <p className="notice">Chua co chapter nao.</p>
+              <h3>Danh sách chương</h3>
+              <p className="notice">Chưa có chương nào.</p>
             </>
           )}
         </div>
 
         <div style={{ marginTop: 12 }}>
           <a className="back-link" href="#/">
-            {"<"}- Quay lai
+            {"<"}- Quay lại
           </a>
         </div>
       </div>

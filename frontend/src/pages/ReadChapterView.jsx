@@ -196,7 +196,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     <div className="app-container">
       <div className={`floating-nav ${navVisible ? "" : "hidden"} ${navAtHeader ? "stuck" : ""}`}>
         <div className="left">
-          <a className="nav-button secondary" href={`#/read/${mangaId}`} aria-label="Danh sach chuong">
+          <a className="nav-button secondary" href={`#/read/${mangaId}`} aria-label="Danh sách chương">
             M
           </a>
           <button
@@ -205,7 +205,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
             onClick={() => {
               if (prevChapter) window.location.hash = `#/read/${mangaId}/chapter/${prevChapter.id}`;
             }}
-            aria-label="Chuong truoc"
+            aria-label="Chương trước"
           >
             {"<"}
           </button>
@@ -236,7 +236,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
             onClick={() => {
               if (nextChapter) window.location.hash = `#/read/${mangaId}/chapter/${nextChapter.id}`;
             }}
-            aria-label="Chưong sau"
+            aria-label="Chương sau"
           >
             {">"}
           </button>

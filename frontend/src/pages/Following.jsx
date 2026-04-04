@@ -82,8 +82,8 @@ export default function Following() {
     return (
       <main className="app-container">
         <div className="col">
-          <h2 className="page-title">Theo doi</h2>
-          <p className="notice">Ban can dang nhap de xem danh sach theo doi va yeu thich.</p>
+          <h2 className="page-title">Theo dõi</h2>
+          <p className="notice">Bạn cần đăng nhập để xem danh sách theo dõi và yêu thích.</p>
           <a className="btn" href="#/auth">
             Dang nhap ngay
           </a>
@@ -96,8 +96,8 @@ export default function Following() {
     return (
       <main className="app-container">
         <div className="col">
-          <h2 className="page-title">Theo doi</h2>
-          <p className="notice">Dang tai du lieu...</p>
+          <h2 className="page-title">Theo dõi</h2>
+          <p className="notice">Đang tải...</p>
         </div>
       </main>
     );
@@ -107,7 +107,7 @@ export default function Following() {
     return (
       <main className="app-container">
         <div className="col">
-          <h2 className="page-title">Theo doi</h2>
+          <h2 className="page-title">Theo dõi</h2>
           <p className="notice" style={{ color: "#f88" }}>
             {error}
           </p>
@@ -119,19 +119,19 @@ export default function Following() {
   return (
     <main className="app-container">
       <div className="col">
-        <h2 className="page-title">Theo doi cua ban</h2>
+        <h2 className="page-title">Theo dõi của bạn</h2>
         <div className="following-summary">
           <div className="summary-box">
-            <strong>Truyen</strong>
-            <span>{library.stats?.manga?.total || 0} muc</span>
+            <strong>Truyện</strong>
+            <span>{library.stats?.manga?.total || 0} mục</span>
           </div>
           <div className="summary-box">
             <strong>Anime</strong>
-            <span>{library.stats?.anime?.total || 0} muc</span>
+            <span>{library.stats?.anime?.total || 0} mục</span>
           </div>
         </div>
         <div className="following-layout">
-          <Column title="Truyen (Manga)" items={library.manga || []} type="manga" />
+          <Column title="Truyện (Manga)" items={library.manga || []} type="manga" />
           <Column title="Anime" items={library.anime || []} type="anime" />
         </div>
       </div>
