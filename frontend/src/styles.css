@@ -333,6 +333,11 @@ body {
   border-radius: 0;
   padding-left: 14px; padding-right: 14px;
 }
+.floating-nav.stuck.hidden {
+  transform: translateY(-140%);
+  opacity: 0;
+  pointer-events: none;
+}
 .floating-nav .left, .floating-nav .center, .floating-nav .right { display:flex; align-items:center; gap:8px }
 .nav-button { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; background: #3ecf6e; color: white; border:0; cursor:pointer }
 .nav-button.secondary { background: rgba(255,255,255,0.04); color:var(--muted) }

@@ -31,7 +31,8 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [chaptersList, setChaptersList] = useState([]);
   const [user, setUser] = useState(() => getUserFromToken());
   const [following, setFollowing] = useState(false);
-  const [navVisible, setNavVisible] = useState(true);
+  const [navVisible, setNavVisible] = useState(false);
+  const [navAtHeader, setNavAtHeader] = useState(false);
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
 
   useEffect(() => {
@@ -108,11 +109,21 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     function onScroll() {
       const y = window.scrollY || 0;
       const delta = y - (lastScrollY.current || 0);
-      if (delta > 10 && y > 120) setNavVisible(false);
-      if (delta < -8 || y <= 120) setNavVisible(true);
+      const header = document.querySelector(".site-header");
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      const mainHeaderVisible = headerBottom > 8 || y <= 80;
+
+      if (mainHeaderVisible) {
+        setNavVisible(false);
+        setNavAtHeader(false);
+      } else {
+        setNavAtHeader(true);
+        if (delta > 2) setNavVisible(true);
+      }
       lastScrollY.current = y;
     }
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -165,7 +176,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   return (
     <div className="app-container">
-      <div className={`floating-nav ${navVisible ? "" : "hidden"}`}>
+      <div className={`floating-nav ${navVisible ? "" : "hidden"} ${navAtHeader ? "stuck" : ""}`}>
         <div className="left">
           <a className="nav-button secondary" href={`#/read/${mangaId}`} aria-label="Danh sach chuong">
             M
