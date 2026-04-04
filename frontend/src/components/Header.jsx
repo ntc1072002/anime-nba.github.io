@@ -33,6 +33,7 @@ function notificationHref(item) {
 function currentPageFromHash() {
   const hash = window.location.hash || "#/";
   const page = hash.replace(/^#\//, "").split("/")[0];
+  if (page === "manga" || page === "anime") return "home";
   return page || "home";
 }
 

@@ -9,14 +9,28 @@ import ReadChapterView from "./pages/ReadChapterView.jsx";
 import Login from "./pages/Login.jsx";
 import WatchEpisodeView from "./pages/WatchEpisodeView.jsx";
 import Following from "./pages/Following.jsx";
+import MobileBrowse from "./pages/MobileBrowse.jsx";
 
 export default function App() {
   const [route, setRoute] = useState(window.location.hash || "#/" );
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia("(max-width: 900px)").matches);
 
   useEffect(() => {
     const onHash = () => setRoute(window.location.hash || "#/" );
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 900px)");
+    const onResize = () => setIsMobile(mq.matches);
+    onResize();
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", onResize);
+      return () => mq.removeEventListener("change", onResize);
+    }
+    mq.addListener(onResize);
+    return () => mq.removeListener(onResize);
   }, []);
 
   // parse route like '#/read/3' or '#/read/3/chapter/5'
@@ -27,7 +41,9 @@ export default function App() {
   const subId = seg[3] || null;
 
   let Page = <Home />;
-  if (page === 'admin') Page = <Admin />;
+  if (isMobile && (page === "" || page === "manga")) Page = <MobileBrowse type="manga" />;
+  else if (isMobile && page === "anime") Page = <MobileBrowse type="anime" />;
+  else if (page === 'admin') Page = <Admin />;
   else if (page === 'following') Page = <Following />;
   else if (page === 'read' && id && sub === 'chapter' && subId) Page = <ReadChapterView mangaId={id} chapterId={subId} />;
   else if (page === 'read' && id) Page = <ReadView id={id} />;
