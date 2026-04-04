@@ -26,6 +26,7 @@ function normalizeImageUrl(value) {
 
 export default function ReadChapterView({ mangaId, chapterId }) {
   const [chapter, setChapter] = useState(null);
+  const [manga, setManga] = useState(null);
   const [loading, setLoading] = useState(true);
   const [chaptersList, setChaptersList] = useState([]);
   const [navVisible, setNavVisible] = useState(true);
@@ -38,7 +39,8 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
   const lastScrollTime = useRef(Date.now());
-  const upwardStartTime = useRef(null);
+  const upwardDuration = useRef(0);
+  const lastDirection = useRef("idle");
   const navRef = useRef(null);
   const navInitTop = useRef(null);
 
@@ -65,6 +67,15 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       })
       .catch(() => {
         if (mounted) setChaptersList([]);
+      });
+
+    fetch(`${API_BASE}/api/manga/${mangaId}`)
+      .then((r) => r.json())
+      .then((item) => {
+        if (mounted) setManga(item || null);
+      })
+      .catch(() => {
+        if (mounted) setManga(null);
       });
 
     navInitTop.current = null;
@@ -141,10 +152,12 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         const header = document.querySelector(".site-header");
         const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
         const headerHidden = headerBottom <= 8;
-        const pauseTooLong = now - (lastScrollTime.current || now) > 260;
+        const dt = Math.min(500, Math.max(0, now - (lastScrollTime.current || now)));
+        const pauseTooLong = now - (lastScrollTime.current || now) > 850;
 
         if (y <= 80 || !headerHidden) {
-          upwardStartTime.current = null;
+          upwardDuration.current = 0;
+          lastDirection.current = "idle";
           setNavVisible(false);
           setNavStuck(false);
           lastScrollY.current = y;
@@ -153,14 +166,19 @@ export default function ReadChapterView({ mangaId, chapterId }) {
         }
 
         if (delta < -2) {
-          if (pauseTooLong || upwardStartTime.current == null) {
-            upwardStartTime.current = now;
+          if (pauseTooLong || lastDirection.current !== "up") {
+            upwardDuration.current = 0;
           }
-          const elapsed = now - upwardStartTime.current;
-          if (elapsed >= 2000) setNavVisible(true);
+          upwardDuration.current += dt;
+          lastDirection.current = "up";
+          if (upwardDuration.current >= 2000) setNavVisible(true);
         } else if (delta > 2) {
-          upwardStartTime.current = null;
+          upwardDuration.current = 0;
+          lastDirection.current = "down";
           setNavVisible(false);
+        } else if (pauseTooLong) {
+          upwardDuration.current = 0;
+          lastDirection.current = "idle";
         }
 
         setNavStuck(false);
@@ -181,7 +199,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       }
 
       if (navInitTop.current != null) {
-        const shouldStuck = y >= Math.max(0, navInitTop.current - 2);
+        const shouldStuck = y >= Math.max(0, navInitTop.current - 2) && y > 120;
         setNavStuck((prev) => (prev === shouldStuck ? prev : shouldStuck));
       }
 
@@ -304,21 +322,19 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       <div className="col">
         {images.length ? (
           <>
-            <div
-              className="reader-top-controls"
-              style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}
-            >
-              <div>
+            <div className="reader-top-controls">
+              <div className="reader-path">
                 <a className="breadcrumb" href="#/">
                   Home
-                </a>{" "}
-                /{" "}
+                </a>
+                {" / "}
                 <a className="breadcrumb" href={`#/read/${mangaId}`}>
-                  Manga
-                </a>{" "}
-                / <strong>Chuong {chapter.number}</strong>
+                  {manga?.title || "Manga"}
+                </a>
+                {" / "}
+                <strong>Chuong {chapter.number}</strong>
               </div>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div className="reader-top-actions">
                 <button
                   className="btn secondary"
                   onClick={() => {
