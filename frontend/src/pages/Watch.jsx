@@ -60,7 +60,7 @@ function AnimeCard({ anime }) {
             <p className="media-desc">{truncatedDesc}</p>
 
             <div className="media-meta-row">
-              <span>{episodes.length} tap</span>
+              <span>{episodes.length} tập</span>
               <div className="media-actions">
                 {isTruncated ? (
                   <button type="button" className="action-chip" onClick={() => setShowModal(true)}>
@@ -103,7 +103,7 @@ function AnimeCard({ anime }) {
               <div>
                 <h2>{anime.title}</h2>
                 <p>{rawDesc}</p>
-                <div className="soft-modal-meta">{episodes.length} tap</div>
+                <div className="soft-modal-meta">{episodes.length} tập</div>
                 <a href={`#/watch/${anime.id}`} className="primary-link">
                   Xem phim
                 </a>
