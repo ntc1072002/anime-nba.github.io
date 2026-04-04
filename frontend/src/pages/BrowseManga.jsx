@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../config.js";
 
 const BROWSE_LIMIT = 50;
+const CACHE_KEY = "browse_manga_cache";
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 function toMillis(value) {
   if (!value) return 0;
@@ -87,6 +89,22 @@ export default function BrowseManga() {
     async function load() {
       setLoading(true);
       try {
+        // Check cache first
+        const cacheData = sessionStorage.getItem(CACHE_KEY);
+        if (cacheData) {
+          try {
+            const parsed = JSON.parse(cacheData);
+            const now = Date.now();
+            if (parsed.timestamp && now - parsed.timestamp < CACHE_DURATION) {
+              // Cache is valid, use it
+              if (mounted) setItems(parsed.items);
+              if (mounted) setLoading(false);
+              return;
+            }
+          } catch { }
+        }
+
+        // Cache miss or expired, fetch from API
         const listUrl = `${API_BASE}/api/manga`;
         const list = await fetchJson(listUrl);
         const base = Array.isArray(list) ? list : [];
@@ -112,6 +130,14 @@ export default function BrowseManga() {
         const detailMap = new Map(detailPairs);
         const enriched = preSorted.map((item) => enrichItem(item, detailMap.get(String(item.id)) || []));
         if (mounted) setItems(enriched);
+        
+        // Store in cache
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+            items: enriched,
+            timestamp: Date.now()
+          }));
+        } catch { }
       } catch {
         if (mounted) setItems([]);
       } finally {
