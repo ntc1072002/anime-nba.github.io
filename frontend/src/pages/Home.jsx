@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Read from "./Read.jsx";
 import Watch from "./Watch.jsx";
+import Recommendations from "../components/Recommendations.jsx";
 import { API_BASE } from '../config.js';
 
 export default function Home() {
@@ -41,9 +42,14 @@ export default function Home() {
 
   return (
     <main className="app-container">
-      <div className="layout">
-        <Read data={manga} loading={loading} />
-        <Watch data={anime} loading={loading} />
+      <div className="layout-home">
+        <div className="layout-home-left">
+          <Read data={manga} loading={loading} />
+          <Watch data={anime} loading={loading} />
+        </div>
+        <div className="layout-home-right">
+          <Recommendations />
+        </div>
       </div>
     </main>
   );

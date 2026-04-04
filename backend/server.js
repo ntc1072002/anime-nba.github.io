@@ -113,6 +113,32 @@ function normalizeFirestoreDoc(data) {
   return out;
 }
 
+function toMillis(value) {
+  if (!value) return 0;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  if (value instanceof Date) return value.getTime();
+  if (typeof value.toDate === "function") {
+    const d = value.toDate();
+    return d instanceof Date ? d.getTime() : 0;
+  }
+  if (typeof value.seconds === "number") return value.seconds * 1000;
+  if (typeof value._seconds === "number") return value._seconds * 1000;
+  return 0;
+}
+
+function pickGenres(item) {
+  const out = [];
+  if (Array.isArray(item?.genres)) out.push(...item.genres);
+  if (Array.isArray(item?.tags)) out.push(...item.tags);
+  if (typeof item?.genre === "string") out.push(...item.genre.split(","));
+  if (typeof item?.tag === "string") out.push(...item.tag.split(","));
+  return Array.from(new Set(out.map((v) => String(v || "").trim()).filter(Boolean)));
+}
+
 async function getCollectionItemsByIds(collectionName, ids) {
   const uniqueIds = Array.from(new Set((ids || []).map((id) => String(id)).filter(Boolean)));
   const itemMap = new Map();
@@ -1044,6 +1070,60 @@ app.post('/api/manga/:id/cover', authenticateJWT, requireRole('admin'), upload.s
     res.json({ cover_url: imageUrl });
   } catch (err) {
     console.error('POST /api/manga/:id/cover error', err);
+    res.status(500).json({ error: 'internal' });
+  }
+});
+
+/* ================== RECOMMENDATIONS ================== */
+app.get('/api/recommendations', async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parsePositiveNumber(req.query.limit) || 12, 1), 50);
+    let uid = null;
+
+    // Try to get Firebase ID token from Authorization header if provided
+    const auth = req.headers.authorization;
+    if (auth?.startsWith('Bearer ')) {
+      try {
+        const decoded = await admin.auth().verifyIdToken(auth.slice(7));
+        uid = decoded.uid;
+      } catch {
+        // Silently ignore invalid token, serve public trending instead
+      }
+    }
+
+    // Fetch all anime and manga
+    const [animeSnap, mangaSnap] = await Promise.all([
+      firestore.collection('anime').get(),
+      firestore.collection('manga').get()
+    ]);
+
+    const allItems = [
+      ...animeSnap.docs.map(d => ({ id: d.id, type: 'anime', ...d.data() })),
+      ...mangaSnap.docs.map(d => ({ id: d.id, type: 'manga', ...d.data() }))
+    ];
+
+    // Sort by latest updated_at (trending)
+    const sorted = allItems.sort((a, b) => {
+      const aTime = Math.max(toMillis(a.updated_at), toMillis(a.created_at));
+      const bTime = Math.max(toMillis(b.updated_at), toMillis(b.created_at));
+      return bTime - aTime;
+    });
+
+    // Take top items
+    const recommended = sorted.slice(0, limit).map(item => ({
+      id: item.id,
+      title: item.title,
+      cover_url: item.cover_url,
+      description: item.description,
+      type: item.type,
+      genres: pickGenres(item),
+      updated_at: item.updated_at,
+      created_at: item.created_at
+    }));
+
+    res.json({ success: true, items: recommended, count: recommended.length });
+  } catch (err) {
+    console.error('GET /api/recommendations error', err);
     res.status(500).json({ error: 'internal' });
   }
 });
