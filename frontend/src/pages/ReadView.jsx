@@ -152,7 +152,7 @@ export default function ReadView({ id }) {
               </header>
               <div className="chapter-table-list">
                 {orderedChapters.map((c) => (
-                  <ChapterRow key={c.id} mangaId={id} chapter={c} />
+                  <ChapterRow key={c.id} label="Chapter - " mangaId={id} chapter={c} />
                 ))}
               </div>
             </section>
@@ -242,8 +242,10 @@ function FollowLikeControls({ id }) {
   );
 }
 
-function ChapterRow({ mangaId, chapter }) {
-  const [hash, setHash] = useState(() => (typeof window !== "undefined" ? window.location.hash : ""));
+function ChapterRow({ mangaId, chapter, label = "Chapter" }) {
+  const [hash, setHash] = useState(() =>
+    typeof window !== "undefined" ? window.location.hash : ""
+  );
 
   useEffect(() => {
     function onHash() {
@@ -254,11 +256,19 @@ function ChapterRow({ mangaId, chapter }) {
   }, []);
 
   const isActive = hash.includes(`/read/${mangaId}/chapter/${chapter.id}`);
-  const timeLabel = formatRelativeTime(chapter.updated_at || chapter.created_at);
-  const chapterLabel = chapter.title ? `Chapter ${chapter.number} - ${chapter.title}` : `${chapter.number}`;
+  const timeLabel = formatRelativeTime(
+    chapter.updated_at || chapter.created_at
+  );
+
+  const chapterLabel = chapter.title
+    ? `${label} ${chapter.number} - ${chapter.title}`
+    : `${label} ${chapter.number}`;
 
   return (
-    <a className={`chapter-table-row ${isActive ? "active" : ""}`} href={`#/read/${mangaId}/chapter/${chapter.id}`}>
+    <a
+      className={`chapter-table-row ${isActive ? "active" : ""}`}
+      href={`#/read/${mangaId}/chapter/${chapter.id}`}
+    >
       <span className="chapter-table-num">{chapterLabel}</span>
       <span className="chapter-table-time">{timeLabel || "-"}</span>
     </a>
