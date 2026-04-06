@@ -12,11 +12,11 @@ export default function WatchView({ id }) {
   /* =============================
      READ EPISODE ID FROM URL
   ============================== */
-  function getEpisodeIdFromUrl() {
-    const hash = window.location.hash;
-    const match = hash.match(/\/episodes\/([^/]+)/);
-    return match ? match[1] : null;
-  }
+  // function getEpisodeIdFromUrl() {
+  //   const hash = window.location.hash;
+  //   const match = hash.match(/\/episodes\/([^/]+)/);
+  //   return match ? match[1] : null;
+  // }
 
   /* =============================
      LOAD ANIME + EPISODES
