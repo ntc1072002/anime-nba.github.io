@@ -138,9 +138,9 @@ export default function WatchView({ id }) {
             <div className="right">
               <div className="episode-row">
                 {episodes.map(ep => (
-                  <a
+                  <button
                     key={ep.id}
-                    href={`#/watch/${id}/episodes/${ep.id}`}
+                    onClick={() => setCurrentEpisode(ep)}
                     className={
                       currentEpisode?.id === ep.id
                         ? "episode-btn active"
@@ -148,7 +148,7 @@ export default function WatchView({ id }) {
                     }
                   >
                     Tập {ep.number}
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>

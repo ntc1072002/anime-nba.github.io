@@ -7,7 +7,7 @@ export default function WatchEpisodeView({ animeId, episodeId }) {
 
   useEffect(() => {
     let mounted = true;
-    fetch(`${API_BASE}/api/anime/${animeId}/episode/${episodeId}`)
+    fetch(`${API_BASE}/api/anime/${animeId}/episodes/${episodeId}`)
       .then(r => r.json())
       .then(data => { if (mounted) setEpisode(data); })
       .catch(err => console.error(err))
