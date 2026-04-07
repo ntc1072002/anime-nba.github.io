@@ -8,7 +8,9 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [page, setPage] = useState(0);
   const [viewMode, setViewMode] = useState("single");
   const [navVisible, setNavVisible] = useState(true);
-  const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const lastScrollY = useRef(0);
+  const topRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -55,14 +57,30 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   // keyboard nav
   useEffect(() => {
+    const currentIndex = chaptersList.findIndex((c) => String(c.id) === String(chapterId));
+    const prevChapter = currentIndex > 0 ? chaptersList[currentIndex - 1] : null;
+    const nextChapter = currentIndex > -1 && currentIndex < chaptersList.length - 1 ? chaptersList[currentIndex + 1] : null;
+
     function onKey(e) {
       if (viewMode !== "single") return;
-      if (e.key === "ArrowLeft") setPage((p) => Math.max(0, p - 1));
-      if (e.key === "ArrowRight") setPage((p) => Math.min(imgs.length - 1, p + 1));
+      if (e.key === "ArrowLeft" && prevChapter) {
+        window.location.hash = `#/read/${mangaId}/chapter/${prevChapter.id}`;
+      }
+      if (e.key === "ArrowRight" && nextChapter) {
+        window.location.hash = `#/read/${mangaId}/chapter/${nextChapter.id}`;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        window.scrollBy({ top: -100, behavior: 'smooth' });
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        window.scrollBy({ top: 100, behavior: 'smooth' });
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [viewMode, imgs.length]);
+  }, [viewMode, chaptersList, chapterId, mangaId]);
 
   // floating nav show/hide on scroll
   useEffect(() => {
@@ -71,6 +89,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
       const delta = y - (lastScrollY.current || 0);
       if (delta > 10 && y > 120) setNavVisible(false);
       if (delta < -8) setNavVisible(true);
+      setShowScrollTop(y > 300);
       lastScrollY.current = y;
     }
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -82,6 +101,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   return (
     <div className="app-container">
+      <div ref={topRef} style={{ height: 0 }} />
       <div className={`floating-nav ${navVisible ? "" : "hidden"}`}>
         <div className="left">
           <a className="nav-button secondary" href="#/">🏠</a>
@@ -114,6 +134,24 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           </select>
         </div>
         <div className="right">
+          <button
+            className="nav-button"
+            onClick={() => {
+              window.scrollBy({ top: -100, behavior: 'smooth' });
+            }}
+            aria-label="scroll up"
+          >
+            ↑
+          </button>
+          <button
+            className="nav-button"
+            onClick={() => {
+              window.scrollBy({ top: 100, behavior: 'smooth' });
+            }}
+            aria-label="scroll down"
+          >
+            ↓
+          </button>
           <button
             className="nav-button"
             onClick={() => {
@@ -179,10 +217,48 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           )}
         </div>
 
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="back-link" onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>← Quay lại</button>
+          <button className="back-link" onClick={() => topRef.current?.scrollIntoView({ behavior: 'smooth' })} style={{ cursor: 'pointer' }}>↑ Lên đầu</button>
         </div>
       </div>
+
+      {/* Floating scroll-to-top button */}
+      <button
+        onClick={() => topRef.current?.scrollIntoView({ behavior: 'smooth' })}
+        style={{
+          position: 'fixed',
+          bottom: 32,
+          right: 32,
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(95, 183, 247, 0.9)',
+          border: 'none',
+          color: 'white',
+          fontSize: '24px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(95, 183, 247, 0.3)',
+          transition: 'all 0.3s ease',
+          zIndex: 1000
+        }}
+        onMouseOver={(e) => {
+          e.target.style.backgroundColor = 'rgba(95, 183, 247, 1)';
+          e.target.style.boxShadow = '0 6px 16px rgba(95, 183, 247, 0.5)';
+          e.target.style.transform = 'scale(1.1)';
+        }}
+        onMouseOut={(e) => {
+          e.target.style.backgroundColor = 'rgba(95, 183, 247, 0.9)';
+          e.target.style.boxShadow = '0 4px 12px rgba(95, 183, 247, 0.3)';
+          e.target.style.transform = 'scale(1)';
+        }}
+        aria-label="Scroll to top"
+      >
+        ↑
+      </button>
     </div>
   );
 }

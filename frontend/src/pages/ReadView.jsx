@@ -89,6 +89,44 @@ export default function ReadView({ id }) {
     };
   }, [id]);
 
+  // Keyboard navigation for scroll
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const start = window.scrollY;
+        const target = Math.max(0, start - 300);
+        const duration = 300;
+        const startTime = performance.now();
+        
+        const animate = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          window.scrollTo(0, start + (target - start) * progress);
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const start = window.scrollY;
+        const target = start + 300;
+        const duration = 300;
+        const startTime = performance.now();
+        
+        const animate = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          window.scrollTo(0, start + (target - start) * progress);
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (loading) {
     return (
       <div className="app-container">
@@ -164,9 +202,12 @@ export default function ReadView({ id }) {
           )}
         </div>
 
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="back-link" onClick={() => window.history.back()} style={{ cursor: 'pointer' }}>
             {"<"}- Quay lại
+          </button>
+          <button className="back-link" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} style={{ cursor: 'pointer' }}>
+            ↑ Lên đầu
           </button>
         </div>
       </div>

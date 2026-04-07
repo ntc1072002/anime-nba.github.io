@@ -34,8 +34,10 @@ export default function ReadChapterView({ mangaId, chapterId }) {
   const [liked, setLiked] = useState(false);
   const [navVisible, setNavVisible] = useState(false);
   const [navAtHeader, setNavAtHeader] = useState(false);
-  const lastScrollY = useRef(typeof window !== "undefined" ? window.scrollY : 0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const lastScrollY = useRef(0);
   const upwardRevealPx = useRef(0);
+  const topRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -120,6 +122,52 @@ export default function ReadChapterView({ mangaId, chapterId }) {
     lastScrollY.current = typeof window !== "undefined" ? window.scrollY : 0;
   }, [mangaId, chapterId]);
 
+  // Keyboard navigation for chapter and scroll
+  useEffect(() => {
+    const currentIndex = chaptersList.findIndex((c) => String(c.id) === String(chapterId));
+    const prevChap = currentIndex > 0 ? chaptersList[currentIndex - 1] : null;
+    const nextChap = currentIndex > -1 && currentIndex < chaptersList.length - 1 ? chaptersList[currentIndex + 1] : null;
+
+    function handleKeyDown(e) {
+      if (e.key === 'ArrowLeft' && prevChap) {
+        window.location.hash = `#/read/${mangaId}/chapter/${prevChap.id}`;
+      } else if (e.key === 'ArrowRight' && nextChap) {
+        window.location.hash = `#/read/${mangaId}/chapter/${nextChap.id}`;
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const start = window.scrollY;
+        const target = Math.max(0, start - 300);
+        const duration = 300;
+        const startTime = performance.now();
+        
+        const animate = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          window.scrollTo(0, start + (target - start) * progress);
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const start = window.scrollY;
+        const target = start + 300;
+        const duration = 300;
+        const startTime = performance.now();
+        
+        const animate = (currentTime) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          window.scrollTo(0, start + (target - start) * progress);
+          if (progress < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mangaId, chapterId, chaptersList]);
+
   useEffect(() => {
     function onScroll() {
       const y = window.scrollY || 0;
@@ -145,6 +193,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           }
         }
       }
+      setShowScrollTop(y > 300);
       lastScrollY.current = y;
     }
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -216,6 +265,7 @@ export default function ReadChapterView({ mangaId, chapterId }) {
 
   return (
     <div className="app-container">
+      <div ref={topRef} style={{ height: 0 }} />
       <div className={`floating-nav ${navVisible ? "" : "hidden"} ${navAtHeader ? "stuck" : ""}`}>
         <div className="left">
           <a className="nav-button secondary" href={`#/read/${mangaId}`} aria-label="Danh sách chương">
@@ -329,6 +379,43 @@ export default function ReadChapterView({ mangaId, chapterId }) {
           </div>
         )}
       </div>
+
+      {/* Scroll to top button */}
+      <button
+        onClick={() => topRef.current?.scrollIntoView({ behavior: 'smooth' })}
+        style={{
+          position: 'fixed',
+          bottom: 32,
+          right: 32,
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          backgroundColor: 'rgba(95, 183, 247, 0.9)',
+          border: 'none',
+          color: 'white',
+          fontSize: '20px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(95, 183, 247, 0.3)',
+          transition: 'all 0.3s ease',
+          zIndex: 100
+        }}
+        onMouseOver={(e) => {
+          e.target.style.backgroundColor = 'rgba(95, 183, 247, 1)';
+          e.target.style.boxShadow = '0 6px 16px rgba(95, 183, 247, 0.5)';
+          e.target.style.transform = 'scale(1.1)';
+        }}
+        onMouseOut={(e) => {
+          e.target.style.backgroundColor = 'rgba(95, 183, 247, 0.9)';
+          e.target.style.boxShadow = '0 4px 12px rgba(95, 183, 247, 0.3)';
+          e.target.style.transform = 'scale(1)';
+        }}
+        aria-label="Scroll to top"
+      >
+        ⬆
+      </button>
     </div>
   );
 }

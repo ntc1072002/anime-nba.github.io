@@ -46,7 +46,16 @@ function AnimeCard({ anime }) {
 
   return (
     <>
-      <article className="media-card" onClick={() => window.location.href = `#/watch/${anime.id}`}>
+      <article className="media-card" onClick={() => {
+        const firstEpisode = episodes.length > 0 ? episodes[0] : null;
+        if (firstEpisode) {
+          window.location.hash = `#/watch/${anime.id}/episodes/${firstEpisode.id}`;
+          console.log("Đi tới tập:", firstEpisode.id);
+        } else {
+          window.location.hash = `#/watch/${anime.id}`;
+          console.log("Đi tới tập: ", anime.id);
+        }
+      }}>
         <div className="media-card-top">
           <div className="media-poster">
             {anime.cover_url ? <img src={anime.cover_url} alt={anime.title} /> : <div className="media-poster-empty">No image</div>}

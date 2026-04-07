@@ -12,11 +12,11 @@ export default function WatchView({ id }) {
   /* =============================
      READ EPISODE ID FROM URL
   ============================== */
-  // function getEpisodeIdFromUrl() {
-  //   const hash = window.location.hash;
-  //   const match = hash.match(/\/episodes\/([^/]+)/);
-  //   return match ? match[1] : null;
-  // }
+  function getEpisodeIdFromUrl() {
+    const hash = window.location.hash;
+    const match = hash.match(/\/episodes\/([^/]+)/);
+    return match ? match[1] : null;
+  }
 
   /* =============================
      LOAD ANIME + EPISODES
@@ -122,7 +122,7 @@ export default function WatchView({ id }) {
                 currentEpisode?.embed_url || item.embed_url
               )}
               allow="autoplay; fullscreen"
-              allowFullScreen
+              // allowFullScreen
               title={currentEpisode?.title || item.title}
             />
           </div>
@@ -188,6 +188,21 @@ function FollowLikeControls({ id }) {
     }
     return () => mounted = false;
   }, [id]);
+
+  // Keyboard navigation for scroll only (when watching anime)
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        window.scrollBy({ top: -100, behavior: 'smooth' });
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        window.scrollBy({ top: 100, behavior: 'smooth' });
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   async function toggleFollow() {
     if (!user) return window.location.hash = '#/auth';
