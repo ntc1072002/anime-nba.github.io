@@ -15,7 +15,7 @@ export default function Admin() {
     e.preventDefault();
     setStatus(null);
     try {
-      const payload = type === "manga" ? { title, description } : { title, description, embed_url: embedUrl };
+      const payload = type === "manga" ? { title, genre, description } : { title, genre, description, embed_url: embedUrl };
       const res = await authFetch(`/api/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
@@ -35,7 +35,7 @@ export default function Admin() {
         }
       }
       // reset form
-      setTitle(""); setDescription(""); setEmbedUrl(""); setCoverFile(null);
+      setTitle(""); setDescription(""); setEmbedUrl(""); setCoverFile(null); setGenre(""); setFileKey(Date.now()); setChapterImages(""); setChapterTitle(""); setEpisodeTitle(""); setEpisodeEmbed("");
       // refresh lists so admin can immediately add chapters/episodes
       try {
         const mangas = await fetchMangaList();
@@ -120,6 +120,7 @@ export default function Admin() {
   const [editChapterData, setEditChapterData] = useState({});
   const [editEpisodeId, setEditEpisodeId] = useState(null);
   const [editEpisodeData, setEditEpisodeData] = useState({});
+  const [genre, setGenre] = useState("");
 
   const fetchChapters = React.useCallback((mid) => {
     if (!mid) return Promise.resolve([]);
@@ -143,61 +144,103 @@ export default function Admin() {
 
   async function addChapter(e) {
     e.preventDefault();
+
     try {
-      // build images array from structured list; keep compatibility if list empty
       let images = [];
-      const hasStructured = chapterImagesList && chapterImagesList.some(i => i.url && i.url.trim());
+
+      const hasStructured =
+        chapterImagesList &&
+        chapterImagesList.some(i => i.url?.trim());
+
       if (hasStructured) {
         images = chapterImagesList
-          .filter(i => i.url && i.url.trim())
-          .map(i => ({ order: Number(i.order) || 1, url: i.url.trim() }))
+          .filter(i => i.url?.trim())
+          .map(i => ({
+            order: Number(i.order) || 1,
+            url: i.url.trim()
+          }))
           .sort((a, b) => a.order - b.order);
       } else {
-        images = chapterImages.split(',').map(s => s.trim()).filter(Boolean).map((u, idx) => ({ order: idx + 1, url: u }));
+        images = chapterImages
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .map((url, idx) => ({
+            order: idx + 1,
+            url
+          }));
       }
 
-      const res = await authFetch(`/api/manga/${targetMangaId}/chapters`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(chapterNumber), title: chapterTitle, images }) });
+      const res = await authFetch(
+        `/api/manga/${targetMangaId}/chapters`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            number: Number(chapterNumber),
+            title: chapterTitle,
+            genre: genre || null,
+            images
+          })
+        }
+      );
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
-      setStatus({ ok: true, msg: `Chapter added (id: ${data.id})` });
-      setChapterTitle(''); setChapterImages(''); setChapterNumber(chapterNumber + 1);
-      setChapterImagesList([{ url: '', order: chapterNumber + 1 }]);
-    } catch (err) { setStatus({ ok: false, msg: err.message }); }
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      setStatus({
+        ok: true,
+        msg: `Chapter added (id: ${data.id})`
+      });
+
+      // reset
+      setChapterTitle("");
+      setChapterImages("");
+      setChapterGenre("");
+      setChapterNumber(n => n + 1);
+      setChapterImagesList([{ url: "", order: 1 }]);
+
+    } catch (err) {
+      setStatus({ ok: false, msg: err.message });
+    }
   }
 
   async function addEpisode(e) {
     e.preventDefault();
-    try {
-      const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
-      setStatus({ ok: true, msg: `Episode added (id: ${data.id})` });
-      setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber + 1);
-    } catch (err) { setStatus({ ok: false, msg: err.message }); }
-  }
 
-  // async function addEpisode(e) {
-  //   e.preventDefault();
-  //   try {
-  //     // build images array from structured list; keep compatibility if list empty
-  //     let images = [];
-  //     const hasStructured = episodeImagesList && episodeImagesList.some(i => i.url && i.url.trim());
-  //     if (hasStructured) {
-  //       images = episodeImagesList
-  //         .filter(i => i.url && i.url.trim())
-  //         .map(i => ({ order: Number(i.order) || 1, url: i.url.trim() }))
-  //         .sort((a, b) => a.order - b.order);
-  //     } else {
-  //       images = episodeImagesList.split(',').map(s => s.trim()).filter(Boolean).map((u, idx) => ({ order: idx + 1, url: u }));
-  //     }
-  //     const res = await authFetch(`/api/anime/${targetAnimeId}/episodes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ number: Number(episodeNumber), title: episodeTitle, embed_url: episodeEmbed, images }) });
-  //     const data = await res.json();
-  //     if (!res.ok) throw new Error(data.error || 'Failed');
-  //     setStatus({ ok: true, msg: `Episode added (id: ${data.id})` });
-  //     setEpisodeTitle(''); setEpisodeEmbed(''); setEpisodeNumber(episodeNumber + 1);
-  //     setEpisodeImagesList([{ url: '', order: episodeNumber + 1 }]);
-  //   } catch (err) { setStatus({ ok: false, msg: err.message }); }
-  // }
+    try {
+      const res = await authFetch(
+        `/api/anime/${targetAnimeId}/episodes`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            number: Number(episodeNumber),
+            title: episodeTitle,
+            genre: genre || null,
+            embed_url: episodeEmbed
+          })
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed");
+
+      setStatus({
+        ok: true,
+        msg: `Episode added (id: ${data.id})`
+      });
+
+      // reset
+      setEpisodeTitle("");
+      setEpisodeEmbed("");
+      setEpisodeGenre("");
+      setEpisodeNumber(n => n + 1);
+
+    } catch (err) {
+      setStatus({ ok: false, msg: err.message });
+    }
+  }
 
   return (
     <div className="app-container">
@@ -232,13 +275,21 @@ export default function Admin() {
 
               <div className="form-row">
                 <label>Ảnh bìa (tùy chọn)</label>
-                <input key={fileKey} type="file" accept="image/*" onChange={e => { setCoverFile(e.target.files?.[0] || null); }} />
+                <input key={fileKey} type="file" accept="image/*" onChange={e => { setCoverFile(e.target.files?.[0] || null); }} required />
               </div>
-
+              <div className="form-row">
+                <label>Thể loại</label>
+                <input
+                  value={genre}
+                  onChange={e => setGenre(e.target.value)}
+                  placeholder="Action, Romance, Fantasy..."
+                  required
+                />
+              </div>
               {/* {type === "manga" ? ( */}
               <div className="form-row">
                 <label>Mô tả</label>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" required/>
+                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" required />
               </div>
               {type === "anime" ? (
                 <div className="form-row">
@@ -250,7 +301,7 @@ export default function Admin() {
 
               <div className="form-actions">
                 <button className="btn" type="submit">Thêm {type}</button>
-                <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setEmbedUrl(""); setCoverFile(null); setStatus(null); }}>Reset</button>
+                <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setFileKey(Date.now()); setEmbedUrl(""); setGenre(""); }}>Reset</button>
                 <div style={{ flex: 1 }} />
                 {status && (
                   <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88" }}>{status.msg}</div>
@@ -273,8 +324,9 @@ export default function Admin() {
                   </div>
                   <div className="form-row"><label>Số chương</label><input type="number" value={chapterNumber} onChange={e => setChapterNumber(Number(e.target.value))} min={1} /></div>
                   <div className="form-row"><label>Tiêu đề chương</label><input value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} /></div>
+                  {/* <div className="form-row"><label>Thể loại</label><input value={chapterGenre} onChange={e => setChapterGenre(e.target.value)} placeholder="Action, Romance, Fantasy..." /></div> */}
                   <div className="form-row"><label>Danh sách ảnh (URL phân tách bằng dấu phẩy)</label><textarea value={chapterImages} onChange={e => setChapterImages(e.target.value)} placeholder="https://.../1.jpg, https://.../2.jpg" /></div>
-                  <div className="form-actions"><button className="btn" type="submit">Thêm chương</button></div>
+                  <div className="form-actions"><button className="btn" onClick={() => { setChapterTitle(""); setChapterImages(""); }} type="submit">Thêm chương</button></div>
                 </form>
               </div>
 

@@ -8,7 +8,7 @@ import WatchView from "./pages/WatchView.jsx";
 import ReadChapterView from "./pages/ReadChapterView.jsx";
 import Login from "./pages/Login.jsx";
 import WatchEpisodeView from "./pages/WatchEpisodeView.jsx";
-import MyLibrary from "./pages/MyLibrary.jsx";
+import Following from "./pages/Following.jsx";
 import MobileBrowse from "./pages/MobileBrowse.jsx";
 import BrowseManga from "./pages/BrowseManga.jsx";
 import BrowseAnime from "./pages/BrowseAnime.jsx";
@@ -48,7 +48,7 @@ export default function App() {
   else if (!isMobile && page === "manga") Page = <BrowseManga />;
   else if (!isMobile && page === "anime") Page = <BrowseAnime />;
   else if (page === 'admin') Page = <Admin />;
-  else if (page === 'following') Page = <MyLibrary />;
+  else if (page === 'following') Page = <Following />;
   else if (page === 'read' && id && sub === 'chapter' && subId) Page = <ReadChapterView mangaId={id} chapterId={subId} />;
   else if (page === 'read' && id) Page = <ReadView id={id} />;
   else if (page === 'auth') Page = <Login />;

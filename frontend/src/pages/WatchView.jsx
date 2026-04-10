@@ -115,16 +115,42 @@ export default function WatchView({ id }) {
 
         {/* PLAYER */}
         <div className="card">
-          <div className="iframe-wrap">
+          <div
+            className="iframe-wrap"
+            style={{
+              position: "relative",
+              width: "100%",
+              height: "70vh",
+              background: "#000"
+            }}
+          >
             <iframe
-              key={currentEpisode?.id}
-              src={normalizeEmbedUrl(
-                currentEpisode?.embed_url || item.embed_url
-              )}
+              key={currentEpisode?.id || "no-episode"}
+              src={
+                currentEpisode?.embed_url
+                  ? normalizeEmbedUrl(currentEpisode.embed_url)
+                  : "about:blank"
+              }
               allow="autoplay; fullscreen"
-              // allowFullScreen
-              title={currentEpisode?.title || item.title}
+              title={currentEpisode?.title || item?.title || "player"}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none"
+              }}
             />
+
+            {/* ===== OVERLAY ===== */}
+
+            {/* Không có tập */}
+            {!currentEpisode && (
+              <OverlayText text="Chưa có tập nào" />
+            )}
+
+            {/* Có tập nhưng chưa có video */}
+            {currentEpisode && !currentEpisode.embed_url && (
+              <OverlayText text="Tập này chưa có video" />
+            )}
           </div>
         </div>
 
@@ -163,7 +189,26 @@ export default function WatchView({ id }) {
   );
 }
 
-
+function OverlayText({ text }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#fff",
+        fontSize: 20,
+        fontWeight: 500,
+        background: "rgba(0,0,0,0.6)",
+        pointerEvents: "none"
+      }}
+    >
+      {text}
+    </div>
+  );
+}
 /* =============================
    FOLLOW + LIKE (GIỮ NGUYÊN)
 ============================== */

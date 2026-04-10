@@ -489,10 +489,13 @@ app.get('/api/manga', async (_, res) => {
 app.post('/api/manga', authenticateJWT, requireRole('admin'), async (req, res) => {
   const title = String(req.body.title || '').trim();
   if (!title) return res.status(400).json({ error: 'title required' });
+  const genre = String(req.body.genre || '').trim();
+  if (!genre) return res.status(400).json({ error: 'genre required' });
 
   const ref = await firestore.collection('manga').add({
     title,
     description: req.body.description || null,
+    genre,
     created_at: new Date(),
     updated_at: new Date()
   });
@@ -512,6 +515,10 @@ app.put('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, res
 
     if (hasOwn(req.body, 'description')) {
       updates.description = req.body.description ? String(req.body.description) : null;
+    }
+
+    if (hasOwn(req.body, 'genre')) {
+      updates.genre = req.body.genre ? String(req.body.genre) : null;
     }
 
     await firestore.collection('manga').doc(req.params.id).update(updates);

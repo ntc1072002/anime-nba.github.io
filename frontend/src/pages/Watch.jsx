@@ -50,10 +50,8 @@ function AnimeCard({ anime }) {
         const firstEpisode = episodes.length > 0 ? episodes[0] : null;
         if (firstEpisode) {
           window.location.hash = `#/watch/${anime.id}/episodes/${firstEpisode.id}`;
-          console.log("Đi tới tập:", firstEpisode.id);
         } else {
-          window.location.hash = `#/watch/${anime.id}`;
-          console.log("Đi tới tập: ", anime.id);
+          window.location.hash = `#/watch/${anime.id}/episodes/0`; // fallback nếu không có tập nào, sẽ hiển thị trang anime mà không có tập nào
         }
       }}>
         <div className="media-card-top">
