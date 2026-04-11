@@ -2,6 +2,30 @@ import React, { useState } from "react";
 import { authFetch, getUserFromToken, getToken } from '../utils/auth.js';
 import { API_BASE } from '../config.js';
 
+const URL_EXTRACT_PATTERN = /https?:\/\/[^\s"'<>]+/gi;
+
+function parseImageUrlsFromText(rawText) {
+  const matches = String(rawText || "").match(URL_EXTRACT_PATTERN) || [];
+  const cleaned = matches
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => s.replace(/^['"]|['"]$/g, ""))
+    .map((s) => s.replace(/[),;]+$/g, ""))
+    .filter((url) => /^https?:\/\//i.test(url))
+    .filter((url) => !/w3\.org\/2000\/svg/i.test(url));
+
+  return Array.from(new Set(cleaned));
+}
+
+function normalizeImageUrls(images) {
+  if (!Array.isArray(images)) return [];
+  const urls = images
+    .map((item) => (typeof item === "string" ? item : item?.url))
+    .map((url) => String(url || "").trim())
+    .filter(Boolean);
+  return Array.from(new Set(urls));
+}
+
 export default function Admin() {
   const [tab, setTab] = useState('content');
   const [type, setType] = useState("manga");
@@ -76,14 +100,14 @@ export default function Admin() {
   const [targetMangaId, setTargetMangaId] = useState("");
   const [chapterNumber, setChapterNumber] = useState(1);
   const [chapterTitle, setChapterTitle] = useState("");
-  const [chapterImages, setChapterImages] = useState(""); // deprecated (kept for compatibility)
-  const [chapterImagesList, setChapterImagesList] = useState([{ url: '', order: 1 }]);
+  const [chapterImages, setChapterImages] = useState("");
+  const [editingChapterId, setEditingChapterId] = useState(null);
 
   const [targetAnimeId, setTargetAnimeId] = useState("");
   const [episodeNumber, setEpisodeNumber] = useState(1);
   const [episodeTitle, setEpisodeTitle] = useState("");
   const [episodeEmbed, setEpisodeEmbed] = useState("");
-  // const [episodeImagesList, setEpisodeImagesList] = useState([{ url: '', order: 1 }]);
+  const [editingEpisodeId, setEditingEpisodeId] = useState(null);
 
   // ensure defaults when lists load
   React.useEffect(() => {
@@ -96,6 +120,9 @@ export default function Admin() {
   // when targetMangaId changes, fetch chapters to propose next chapter number
   React.useEffect(() => {
     if (!targetMangaId) return;
+    setEditingChapterId(null);
+    setChapterTitle("");
+    setChapterImages("");
     fetch(`${API_BASE}/api/manga/${targetMangaId}/chapters`).then(r => r.json()).then(d => {
       const arr = d || [];
       const max = arr.reduce((m, i) => Math.max(m, Number(i.number || 0)), 0);
@@ -106,6 +133,9 @@ export default function Admin() {
   // when targetAnimeId changes, fetch episodes to propose next episode number
   React.useEffect(() => {
     if (!targetAnimeId) return;
+    setEditingEpisodeId(null);
+    setEpisodeTitle("");
+    setEpisodeEmbed("");
     fetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes`).then(r => r.json()).then(d => {
       const arr = d || [];
       const max = arr.reduce((m, i) => Math.max(m, Number(i.number || 0)), 0);
@@ -116,10 +146,6 @@ export default function Admin() {
   // Chapters & Episodes lists and edit states for admin management
   const [currentChapters, setCurrentChapters] = useState([]);
   const [currentEpisodes, setCurrentEpisodes] = useState([]);
-  const [editChapterId, setEditChapterId] = useState(null);
-  const [editChapterData, setEditChapterData] = useState({});
-  const [editEpisodeId, setEditEpisodeId] = useState(null);
-  const [editEpisodeData, setEditEpisodeData] = useState({});
   const [genre, setGenre] = useState("");
 
   const fetchChapters = React.useCallback((mid) => {
@@ -142,39 +168,64 @@ export default function Admin() {
   React.useEffect(() => { if (targetMangaId) fetchChapters(targetMangaId); }, [targetMangaId, fetchChapters]);
   React.useEffect(() => { if (targetAnimeId) fetchEpisodes(targetAnimeId); }, [targetAnimeId, fetchEpisodes]);
 
+  function resetChapterForm(chapters = currentChapters) {
+    const max = (chapters || []).reduce((m, i) => Math.max(m, Number(i?.number || 0)), 0);
+    setEditingChapterId(null);
+    setChapterNumber(max + 1 || 1);
+    setChapterTitle("");
+    setChapterImages("");
+  }
+
+  function startEditChapter(chapter) {
+    const row = chapter || {};
+    const imageUrls = normalizeImageUrls(row.images);
+    setEditingChapterId(row.id || null);
+    setChapterNumber(Number(row.number) || 1);
+    setChapterTitle(row.title || "");
+    setChapterImages(imageUrls.join(",\n"));
+    setStatus({ ok: true, msg: `Dang sua Chapter ${Number(row.number) || ""}` });
+  }
+
+  function resetEpisodeForm(episodes = currentEpisodes) {
+    const max = (episodes || []).reduce((m, i) => Math.max(m, Number(i?.number || 0)), 0);
+    setEditingEpisodeId(null);
+    setEpisodeNumber(max + 1 || 1);
+    setEpisodeTitle("");
+    setEpisodeEmbed("");
+  }
+
+  function startEditEpisode(episode) {
+    const row = episode || {};
+    setEditingEpisodeId(row.id || null);
+    setEpisodeNumber(Number(row.number) || 1);
+    setEpisodeTitle(row.title || "");
+    setEpisodeEmbed(row.embed_url || "");
+    setStatus({ ok: true, msg: `Dang sua Episode ${Number(row.number) || ""}` });
+  }
+
   async function addChapter(e) {
     e.preventDefault();
+    setStatus(null);
 
     try {
-      let images = [];
+      if (!targetMangaId) throw new Error("Vui long chon truyen.");
+      if (!Number(chapterNumber) || Number(chapterNumber) <= 0) throw new Error("So chuong khong hop le.");
+      const isEditing = !!editingChapterId;
+      const images = parseImageUrlsFromText(chapterImages).map((url, idx) => ({
+        order: idx + 1,
+        url
+      }));
 
-      const hasStructured =
-        chapterImagesList &&
-        chapterImagesList.some(i => i.url?.trim());
-
-      if (hasStructured) {
-        images = chapterImagesList
-          .filter(i => i.url?.trim())
-          .map(i => ({
-            order: Number(i.order) || 1,
-            url: i.url.trim()
-          }))
-          .sort((a, b) => a.order - b.order);
-      } else {
-        images = chapterImages
-          .split(',')
-          .map(s => s.trim())
-          .filter(Boolean)
-          .map((url, idx) => ({
-            order: idx + 1,
-            url
-          }));
+      if (!images.length) {
+        throw new Error("Khong tim thay URL hop le. Hay dan cac link bat dau bang http/https.");
       }
 
       const res = await authFetch(
-        `/api/manga/${targetMangaId}/chapters`,
+        isEditing
+          ? `/api/manga/${targetMangaId}/chapters/${editingChapterId}`
+          : `/api/manga/${targetMangaId}/chapters`,
         {
-          method: "POST",
+          method: isEditing ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             number: Number(chapterNumber),
@@ -190,15 +241,13 @@ export default function Admin() {
 
       setStatus({
         ok: true,
-        msg: `Chapter added (id: ${data.id})`
+        msg: isEditing
+          ? `Chapter updated (id: ${editingChapterId})`
+          : `Chapter added (id: ${data.id})`
       });
 
-      // reset
-      setChapterTitle("");
-      setChapterImages("");
-      setChapterGenre("");
-      setChapterNumber(n => n + 1);
-      setChapterImagesList([{ url: "", order: 1 }]);
+      const refreshed = await fetchChapters(targetMangaId);
+      resetChapterForm(refreshed);
 
     } catch (err) {
       setStatus({ ok: false, msg: err.message });
@@ -207,12 +256,18 @@ export default function Admin() {
 
   async function addEpisode(e) {
     e.preventDefault();
+    setStatus(null);
 
     try {
+      if (!targetAnimeId) throw new Error("Vui long chon anime.");
+      if (!Number(episodeNumber) || Number(episodeNumber) <= 0) throw new Error("So tap khong hop le.");
+      const isEditing = !!editingEpisodeId;
       const res = await authFetch(
-        `/api/anime/${targetAnimeId}/episodes`,
+        isEditing
+          ? `/api/anime/${targetAnimeId}/episodes/${editingEpisodeId}`
+          : `/api/anime/${targetAnimeId}/episodes`,
         {
-          method: "POST",
+          method: isEditing ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             number: Number(episodeNumber),
@@ -228,14 +283,13 @@ export default function Admin() {
 
       setStatus({
         ok: true,
-        msg: `Episode added (id: ${data.id})`
+        msg: isEditing
+          ? `Episode updated (id: ${editingEpisodeId})`
+          : `Episode added (id: ${data.id})`
       });
 
-      // reset
-      setEpisodeTitle("");
-      setEpisodeEmbed("");
-      setEpisodeGenre("");
-      setEpisodeNumber(n => n + 1);
+      const refreshed = await fetchEpisodes(targetAnimeId);
+      resetEpisodeForm(refreshed);
 
     } catch (err) {
       setStatus({ ok: false, msg: err.message });
@@ -311,143 +365,136 @@ export default function Admin() {
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'chapters' ? 'block' : 'none' }}>
-            <h3>Quản lý chương</h3>
-            <div style={{ display: 'flex', gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <h4>Thêm chương mới</h4>
+            <h3>Quản lý truyện</h3>
+            <div className="admin-split">
+              <div className="admin-split-col">
+                <h4>{editingChapterId ? "Chỉnh sửa Chapter" : "Thêm Chapter mới"}</h4>
+                {status && (
+                  <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88", marginBottom: 8 }}>{status.msg}</div>
+                )}
                 <form className="admin-form" onSubmit={addChapter}>
                   <div className="form-row">
-                    <label>Chọn truyện</label>
+                    <label>Manga</label>
                     <select value={targetMangaId} onChange={e => setTargetMangaId(e.target.value)}>
                       {mangaList.map(m => <option key={m.id} value={m.id}>{m.title} (id:{m.id})</option>)}
                     </select>
                   </div>
-                  <div className="form-row"><label>Số chương</label><input type="number" value={chapterNumber} onChange={e => setChapterNumber(Number(e.target.value))} min={1} /></div>
-                  <div className="form-row"><label>Tiêu đề chương</label><input value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} /></div>
+                  <div className="form-row"><label>Số Chapter</label><input type="number" value={chapterNumber} onChange={e => setChapterNumber(Number(e.target.value))} min={1} /></div>
+                  <div className="form-row"><label>Tiêu đề Chapter</label><input value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} /></div>
                   {/* <div className="form-row"><label>Thể loại</label><input value={chapterGenre} onChange={e => setChapterGenre(e.target.value)} placeholder="Action, Romance, Fantasy..." /></div> */}
-                  <div className="form-row"><label>Danh sách ảnh (URL phân tách bằng dấu phẩy)</label><textarea value={chapterImages} onChange={e => setChapterImages(e.target.value)} placeholder="https://.../1.jpg, https://.../2.jpg" /></div>
-                  <div className="form-actions"><button className="btn" onClick={() => { setChapterTitle(""); setChapterImages(""); }} type="submit">Thêm chương</button></div>
+                  <div className="form-row"><label>Danh sách ảnh (URL, cách nhau bằng dấu phẩy hoặc xuống dòng)</label><textarea className="chapter-images-textarea" value={chapterImages} onChange={e => setChapterImages(e.target.value)} placeholder="https://.../1.jpg, https://.../2.jpg" /></div>
+                  <div className="form-actions">
+                    <button className="btn" type="submit">{editingChapterId ? "Cập nhật chapter" : "Thêm chapter"}</button>
+                    {editingChapterId && (
+                      <button type="button" className="btn secondary" onClick={() => resetChapterForm()}>
+                        Hủy sửa
+                      </button>
+                    )}
+                  </div>
                 </form>
               </div>
 
-              <div style={{ flex: 1 }}>
-                <h4>Danh sách chương của truyện đã chọn</h4>
+              <div className="admin-split-col chapter-list-panel">
+                <h4>Danh sách chương truyện "{mangaList.map(m => m.id === targetMangaId ? m.title : null)}"</h4>
                 <div style={{ marginBottom: 8 }}>
                   <button className="btn" onClick={() => fetchChapters(targetMangaId)}>Tải lại</button>
                 </div>
+                <div className="chapter-list-body">
                 {currentChapters.length === 0 ? (
-                  <p style={{ color: '#666' }}>Chưa có chương</p>
+                  <p style={{ color: '#666' }}>Chưa có chapter</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="chapter-list-scroll">
                     {currentChapters.map(c => (
                       <div key={c.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {editChapterId === c.id ? (
-                          <div style={{ flex: 1, display: 'flex', gap: 8 }}>
-                            <input style={{ width: 80 }} value={editChapterData.number || ''} onChange={e => setEditChapterData(prev => ({ ...prev, number: e.target.value }))} />
-                            <input style={{ flex: 1 }} value={editChapterData.title || ''} onChange={e => setEditChapterData(prev => ({ ...prev, title: e.target.value }))} />
-                            <button className="btn" onClick={async () => {
-                              try {
-                                const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${editChapterId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editChapterData) });
-                                const j = await res.json();
-                                if (!res.ok) throw new Error(j.error || 'Failed');
-                                setEditChapterId(null); setEditChapterData({}); fetchChapters(targetMangaId);
-                              } catch (err) { alert(err.message); }
-                            }}>Lưu</button>
-                            <button className="btn secondary" onClick={() => { setEditChapterId(null); setEditChapterData({}); }}>Hủy</button>
-                          </div>
-                        ) : (
-                          <>
-                            <div style={{ flex: 1 }}>
-                              <strong>Chap {c.number}</strong> — <span style={{ color: '#aaa' }}>{c.title || 'Không tiêu đề'}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button className="btn" onClick={() => { setEditChapterId(c.id); setEditChapterData({ number: c.number, title: c.title, images: c.images }); }}>Sửa</button>
-                              <button className="btn secondary" onClick={async () => {
-                                if (!confirm('Xóa chương này?')) return;
-                                try {
-                                  const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
-                                  if (!res.ok) throw new Error('Failed');
-                                  fetchChapters(targetMangaId);
-                                } catch (err) { alert(err.message); }
-                              }}>Xóa</button>
-                            </div>
-                          </>
-                        )}
+                        <div style={{ flex: 1 }}>
+                          <strong>Chap {c.number}</strong> - <span style={{ color: '#aaa' }}>{c.title || 'Không tiêu đề'}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button className="btn" onClick={() => startEditChapter(c)}>
+                            {editingChapterId === c.id ? "Đang sửa" : "Sửa"}
+                          </button>
+                          <button className="btn secondary" onClick={async () => {
+                            if (!confirm('Xóa chapter này?')) return;
+                            try {
+                              const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
+                              if (!res.ok) throw new Error('Failed');
+                              const refreshed = await fetchChapters(targetMangaId);
+                              if (editingChapterId === c.id) resetChapterForm(refreshed);
+                            } catch (err) { alert(err.message); }
+                          }}>Xóa</button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'episodes' ? 'block' : 'none' }}>
-            <h3>Quản lý tập</h3>
-            <div style={{ display: 'flex', gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <h4>Thêm tập mới</h4>
+            <h3>Quan ly tap</h3>
+            <div className="admin-split">
+              <div className="admin-split-col">
+                <h4>{editingEpisodeId ? "Chỉnh sửa tập" : "Thêm tập mới"}</h4>
+                {status && (
+                  <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88", marginBottom: 8 }}>{status.msg}</div>
+                )}
                 <form className="admin-form" onSubmit={addEpisode}>
                   <div className="form-row">
-                    <label>Chọn anime</label>
+                    <label>Chon anime</label>
                     <select value={targetAnimeId} onChange={e => setTargetAnimeId(e.target.value)}>
                       {animeList.map(a => <option key={a.id} value={a.id}>{a.title} (id:{a.id})</option>)}
                     </select>
                   </div>
-                  <div className="form-row"><label>Số tập</label><input type="number" value={episodeNumber} onChange={e => setEpisodeNumber(e.target.value)} min={1} /></div>
-                  <div className="form-row"><label>Tiêu đề tập</label><input value={episodeTitle} onChange={e => setEpisodeTitle(e.target.value)} /></div>
+                  <div className="form-row"><label>So tap</label><input type="number" value={episodeNumber} onChange={e => setEpisodeNumber(e.target.value)} min={1} /></div>
+                  <div className="form-row"><label>Tieu de tap</label><input value={episodeTitle} onChange={e => setEpisodeTitle(e.target.value)} /></div>
                   <div className="form-row"><label>Embed URL</label><input value={episodeEmbed} onChange={e => setEpisodeEmbed(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" /></div>
-                  <div className="form-actions"><button className="btn" type="submit">Thêm tập</button></div>
+                  <div className="form-actions">
+                    <button className="btn" type="submit">{editingEpisodeId ? "Cap nhat tap" : "Them tap"}</button>
+                    {editingEpisodeId && (
+                      <button type="button" className="btn secondary" onClick={() => resetEpisodeForm()}>
+                        Huy sua
+                      </button>
+                    )}
+                  </div>
                 </form>
               </div>
 
-              <div style={{ flex: 1 }}>
+              <div className="admin-split-col chapter-list-panel">
                 <h4>Danh sách tập của anime đã chọn</h4>
                 <div style={{ marginBottom: 8 }}>
                   <button className="btn" onClick={() => fetchEpisodes(targetAnimeId)}>Tải lại</button>
                 </div>
+                <div className="chapter-list-body">
                 {currentEpisodes.length === 0 ? (
-                  <p style={{ color: '#666' }}>Chưa có tập</p>
+                  <p style={{ color: '#666' }}>Chua co tap</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="chapter-list-scroll">
                     {currentEpisodes.map(ep => (
                       <div key={ep.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {editEpisodeId === ep.id ? (
-                          <div style={{ flex: 1, display: 'flex', gap: 8 }}>
-                            <input style={{ width: 80 }} value={editEpisodeData.number || ''} onChange={e => setEditEpisodeData(prev => ({ ...prev, number: e.target.value }))} />
-                            <input style={{ flex: 1 }} value={editEpisodeData.title || ''} onChange={e => setEditEpisodeData(prev => ({ ...prev, title: e.target.value }))} />
-                            <input style={{ flex: 1 }} value={editEpisodeData.embed_url || ''} onChange={e => setEditEpisodeData(prev => ({ ...prev, embed_url: e.target.value }))} />
-                            <button className="btn" onClick={async () => {
-                              try {
-                                const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${editEpisodeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editEpisodeData) });
-                                const j = await res.json();
-                                if (!res.ok) throw new Error(j.error || 'Failed');
-                                setEditEpisodeId(null); setEditEpisodeData({}); fetchEpisodes(targetAnimeId);
-                              } catch (err) { alert(err.message); }
-                            }}>Lưu</button>
-                            <button className="btn secondary" onClick={() => { setEditEpisodeId(null); setEditEpisodeData({}); }}>Hủy</button>
-                          </div>
-                        ) : (
-                          <>
-                            <div style={{ flex: 1 }}>
-                              <strong>Tập {ep.number}</strong> — <span style={{ color: '#aaa' }}>{ep.title || 'Không tiêu đề'}</span>
-                            </div>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button className="btn" onClick={() => { setEditEpisodeId(ep.id); setEditEpisodeData({ number: ep.number, title: ep.title, embed_url: ep.embed_url }); }}>Sửa</button>
-                              <button className="btn secondary" onClick={async () => {
-                                if (!confirm('Xóa tập này?')) return;
-                                try {
-                                  const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
-                                  if (!res.ok) throw new Error('Failed');
-                                  fetchEpisodes(targetAnimeId);
-                                } catch (err) { alert(err.message); }
-                              }}>Xóa</button>
-                            </div>
-                          </>
-                        )}
+                        <div style={{ flex: 1 }}>
+                          <strong>Tap {ep.number}</strong> - <span style={{ color: '#aaa' }}>{ep.title || 'Khong tieu de'}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button className="btn" onClick={() => startEditEpisode(ep)}>
+                            {editingEpisodeId === ep.id ? "Đang sửa" : "Sửa"}
+                          </button>
+                          <button className="btn secondary" onClick={async () => {
+                            if (!confirm('Xóa tập này?')) return;
+                            try {
+                              const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
+                              if (!res.ok) throw new Error('Failed');
+                              const refreshed = await fetchEpisodes(targetAnimeId);
+                              if (editingEpisodeId === ep.id) resetEpisodeForm(refreshed);
+                            } catch (err) { alert(err.message); }
+                          }}>Xóa</button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
+                </div>
               </div>
             </div>
           </div>
@@ -905,3 +952,4 @@ function UsersPanel() {
     </div>
   );
 }
+

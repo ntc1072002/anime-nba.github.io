@@ -215,6 +215,124 @@ body {
 .tab-button { padding:8px 12px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); cursor:pointer }
 .tab-button.active { background: linear-gradient(90deg, rgba(124,58,237,0.14), transparent); color: white; border-color: rgba(124,58,237,0.25) }
 .tab-panel { display:block }
+
+/* ====== SPLIT LAYOUT ====== */
+.admin-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* ====== COLUMN ====== */
+.admin-split-col {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====== FORM ====== */
+.admin-split-col .admin-form {
+  max-width: none;
+  flex: 0 0 auto;
+  padding-right: 0;
+}
+
+/* ====== TEXTAREA ====== */
+.chapter-images-textarea {
+  min-height: 180px;
+  max-height: 320px;
+  resize: vertical;
+}
+
+/* ====== LIST PANEL (QUAN TRỌNG) ====== */
+.chapter-list-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* FIX scroll */
+}
+
+/* ====== LIST BODY ====== */
+.chapter-list-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden; /* FIX tràn */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====== SCROLL CONTAINER ====== */
+.chapter-list-scroll {
+  height: 300px;        /* 👈 cố định chiều cao */
+  max-height: 300px;    /* đảm bảo không bị override */
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding-right: 4px;
+
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+/* ====== SCROLLBAR (Chrome, Edge) ====== */
+.chapter-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chapter-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(140, 140, 140, 0.6);
+  border-radius: 6px;
+}
+
+.chapter-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(180, 180, 180, 0.8);
+}
+
+/* ====== ITEM UI (OPTIONAL NHƯNG NÊN CÓ) ====== */
+.chapter-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.chapter-item:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+
+.chapter-item.active {
+  background: rgba(95, 183, 247, 0.2);
+  border: 1px solid rgba(95, 183, 247, 0.4);
+}
+
+/* ====== STICKY HEADER (NẾU CÓ) ====== */
+.chapter-list-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #111;
+  padding-bottom: 6px;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 992px) {
+  .admin-split {
+    grid-template-columns: 1fr;
+  }
+
+  .chapter-list-scroll {
+    max-height: 420px;
+    padding-right: 0;
+  }
+}
+
 .users-table {
   width: 100%;
   border-collapse: collapse;
