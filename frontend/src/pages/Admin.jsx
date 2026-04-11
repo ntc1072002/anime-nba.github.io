@@ -243,7 +243,7 @@ export default function Admin() {
       setStatus({
         ok: true,
         msg: isEditing
-          ? `Chapter updated)`
+          ? `Chapter updated`
           : `Chapter added`
       });
 
@@ -369,10 +369,10 @@ export default function Admin() {
             <h3>Quản lý truyện</h3>
             <div className="admin-split">
               <div className="admin-split-col">
-                <h4>{editingChapterId ? `${status.msg}` : "Thêm Chapter mới"}</h4>
-                {/* {status && (
+                <h4>{editingChapterId ? "Chỉnh sửa Chapter" : "Thêm Chapter mới"}</h4>
+                {status && (
                   <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88", marginBottom: 8 }}>{status.msg}</div>
-                )} */}
+                )}
                 <form className="admin-form" onSubmit={addChapter}>
                   <div className="form-row">
                     <label>Manga</label>
@@ -434,7 +434,7 @@ export default function Admin() {
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'episodes' ? 'block' : 'none' }}>
-            <h3>Quan ly tap</h3>
+            <h3>Quản lý tập</h3>
             <div className="admin-split">
               <div className="admin-split-col">
                 <h4>{editingEpisodeId ? "Chỉnh sửa tập" : "Thêm tập mới"}</h4>
@@ -443,19 +443,19 @@ export default function Admin() {
                 )}
                 <form className="admin-form" onSubmit={addEpisode}>
                   <div className="form-row">
-                    <label>Chon anime</label>
+                    <label>Chọn anime</label>
                     <select value={targetAnimeId} onChange={e => setTargetAnimeId(e.target.value)}>
                       {animeList.map(a => <option key={a.id} value={a.id}>{a.title} (id:{a.id})</option>)}
                     </select>
                   </div>
-                  <div className="form-row"><label>So tap</label><input type="number" value={episodeNumber} onChange={e => setEpisodeNumber(e.target.value)} min={1} /></div>
-                  <div className="form-row"><label>Tieu de tap</label><input value={episodeTitle} onChange={e => setEpisodeTitle(e.target.value)} /></div>
+                  <div className="form-row"><label>Số tập</label><input type="number" value={episodeNumber} onChange={e => setEpisodeNumber(e.target.value)} min={1} /></div>
+                  <div className="form-row"><label>Tiêu đề tập</label><input value={episodeTitle} onChange={e => setEpisodeTitle(e.target.value)} /></div>
                   <div className="form-row"><label>Embed URL</label><input value={episodeEmbed} onChange={e => setEpisodeEmbed(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" /></div>
                   <div className="form-actions">
-                    <button className="btn" type="submit">{editingEpisodeId ? "Cap nhat tap" : "Them tap"}</button>
+                    <button className="btn" type="submit">{editingEpisodeId ? "Cập nhật tập" : "Thêm tập"}</button>
                     {editingEpisodeId && (
                       <button type="button" className="btn secondary" onClick={() => resetEpisodeForm()}>
-                        Huy sua
+                        Hủy sửa
                       </button>
                     )}
                   </div>
@@ -469,13 +469,13 @@ export default function Admin() {
                 </div>
                 <div className="chapter-list-body">
                 {currentEpisodes.length === 0 ? (
-                  <p style={{ color: '#666' }}>Chua co tap</p>
+                  <p style={{ color: '#666' }}>Chưa có tập</p>
                 ) : (
                   <div className="chapter-list-scroll">
                     {currentEpisodes.map(ep => (
                       <div key={ep.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ flex: 1 }}>
-                          <strong>Tap {ep.number}</strong> - <span style={{ color: '#aaa' }}>{ep.title || 'Khong tieu de'}</span>
+                          <strong>Tap {ep.number}</strong> - <span style={{ color: '#aaa' }}>{ep.title || 'Không tiêu đề'}</span>
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button className="btn" onClick={() => startEditEpisode(ep)}>
