@@ -183,7 +183,7 @@ export default function Admin() {
     setChapterNumber(Number(row.number) || 1);
     setChapterTitle(row.title || "");
     setChapterImages(imageUrls.join(",\n"));
-    setStatus({ ok: true, msg: `Dang sua Chapter ${Number(row.number) || ""}` });
+    setStatus({ ok: true, msg: `Đang sửa Chapter ${Number(row.number) || ""}` });
   }
 
   function resetEpisodeForm(episodes = currentEpisodes) {
@@ -200,7 +200,7 @@ export default function Admin() {
     setEpisodeNumber(Number(row.number) || 1);
     setEpisodeTitle(row.title || "");
     setEpisodeEmbed(row.embed_url || "");
-    setStatus({ ok: true, msg: `Dang sua Episode ${Number(row.number) || ""}` });
+    setStatus({ ok: true, msg: `Đang sửa Episode ${Number(row.number) || ""}` });
   }
 
   async function addChapter(e) {
@@ -208,8 +208,8 @@ export default function Admin() {
     setStatus(null);
 
     try {
-      if (!targetMangaId) throw new Error("Vui long chon truyen.");
-      if (!Number(chapterNumber) || Number(chapterNumber) <= 0) throw new Error("So chuong khong hop le.");
+      if (!targetMangaId) throw new Error("Vui long chọn truyện.");
+      if (!Number(chapterNumber) || Number(chapterNumber) <= 0) throw new Error("Số chương không hợp lệ.");
       const isEditing = !!editingChapterId;
       const images = parseImageUrlsFromText(chapterImages).map((url, idx) => ({
         order: idx + 1,
@@ -217,7 +217,7 @@ export default function Admin() {
       }));
 
       if (!images.length) {
-        throw new Error("Khong tim thay URL hop le. Hay dan cac link bat dau bang http/https.");
+        throw new Error("Không tìm thấy URL hợp lệ. Hãy dán các liên kết bắt đầu bằng http/https.");
       }
 
       const res = await authFetch(
@@ -242,8 +242,8 @@ export default function Admin() {
       setStatus({
         ok: true,
         msg: isEditing
-          ? `Chapter updated (id: ${editingChapterId})`
-          : `Chapter added (id: ${data.id})`
+          ? `Chapter updated)`
+          : `Chapter added`
       });
 
       const refreshed = await fetchChapters(targetMangaId);
@@ -259,8 +259,8 @@ export default function Admin() {
     setStatus(null);
 
     try {
-      if (!targetAnimeId) throw new Error("Vui long chon anime.");
-      if (!Number(episodeNumber) || Number(episodeNumber) <= 0) throw new Error("So tap khong hop le.");
+      if (!targetAnimeId) throw new Error("Vui lòng chọn anime.");
+      if (!Number(episodeNumber) || Number(episodeNumber) <= 0) throw new Error("Số tập không hợp lệ.");
       const isEditing = !!editingEpisodeId;
       const res = await authFetch(
         isEditing
@@ -284,8 +284,8 @@ export default function Admin() {
       setStatus({
         ok: true,
         msg: isEditing
-          ? `Episode updated (id: ${editingEpisodeId})`
-          : `Episode added (id: ${data.id})`
+          ? `Episode updated`
+          : `Episode added`
       });
 
       const refreshed = await fetchEpisodes(targetAnimeId);
