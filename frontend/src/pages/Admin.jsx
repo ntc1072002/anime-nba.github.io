@@ -174,6 +174,7 @@ export default function Admin() {
     setChapterNumber(max + 1 || 1);
     setChapterTitle("");
     setChapterImages("");
+    setStatus({ ok: true, msg: "" });
   }
 
   function startEditChapter(chapter) {
@@ -368,10 +369,10 @@ export default function Admin() {
             <h3>Quản lý truyện</h3>
             <div className="admin-split">
               <div className="admin-split-col">
-                <h4>{editingChapterId ? "Chỉnh sửa Chapter" : "Thêm Chapter mới"}</h4>
-                {status && (
+                <h4>{editingChapterId ? `${status.msg}` : "Thêm Chapter mới"}</h4>
+                {/* {status && (
                   <div className="notice" style={{ color: status.ok ? "#8ef" : "#f88", marginBottom: 8 }}>{status.msg}</div>
-                )}
+                )} */}
                 <form className="admin-form" onSubmit={addChapter}>
                   <div className="form-row">
                     <label>Manga</label>
