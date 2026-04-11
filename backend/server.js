@@ -249,10 +249,12 @@ app.post("/api/anime", authenticateJWT, requireRole('admin'), async (req, res) =
   try {
     const title = String(req.body.title || '').trim();
     if (!title) return res.status(400).json({ error: "title required" });
+    const genre = String(req.body.genre || '').trim();
 
     const ref = await firestore.collection('anime').add({
       title,
       description: req.body.description ? String(req.body.description) : null,
+      genre: genre || null,
       embed_url: req.body.embed_url || null,
       created_at: new Date(),
       updated_at: new Date()
@@ -281,6 +283,11 @@ app.put("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, res
 
     if (hasOwn(req.body, 'embed_url')) {
       updates.embed_url = req.body.embed_url ? String(req.body.embed_url) : null;
+    }
+
+    if (hasOwn(req.body, 'genre')) {
+      const nextGenre = req.body.genre == null ? '' : String(req.body.genre).trim();
+      updates.genre = nextGenre || null;
     }
 
     await firestore.collection('anime').doc(req.params.id).update(updates);

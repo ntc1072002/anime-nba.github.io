@@ -577,6 +577,15 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
                     />
                   </div>
                   <div className="form-row" style={{ marginBottom: 8 }}>
+                    <label style={{ fontSize: 12 }}>Genre</label>
+                    <input
+                      value={editData.genre || ''}
+                      onChange={e => setEditData({ ...editData, genre: e.target.value })}
+                      style={{ fontSize: 12 }}
+                      placeholder="Action, Romance, Fantasy..."
+                    />
+                  </div>
+                  <div className="form-row" style={{ marginBottom: 8 }}>
                     <label style={{ fontSize: 12 }}>Mô tả</label>
                     <textarea
                       value={editData.description || ''}
@@ -609,6 +618,9 @@ function MangaManagementPanel({ mangaList, fetchMangaList, status, setStatus }) 
                   </p>
                   <p style={{ margin: '0 0 12px 0', color: '#888', fontSize: 12, maxHeight: 60, overflow: 'hidden' }}>
                     {m.description}
+                  </p>
+                  <p style={{ margin: '0 0 12px 0', color: '#9aa', fontSize: 12 }}>
+                    Genre: {m.genre || '-'}
                   </p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn" onClick={() => handleEdit(m)} style={{ fontSize: 12, flex: 1 }}>✏️ Sửa</button>
@@ -737,6 +749,15 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, status, setStatus }) 
                     />
                   </div>
                   <div className="form-row" style={{ marginBottom: 8 }}>
+                    <label style={{ fontSize: 12 }}>Genre</label>
+                    <input
+                      value={editData.genre || ''}
+                      onChange={e => setEditData({ ...editData, genre: e.target.value })}
+                      style={{ fontSize: 12 }}
+                      placeholder="Action, Romance, Fantasy..."
+                    />
+                  </div>
+                  <div className="form-row" style={{ marginBottom: 8 }}>
                     <label style={{ fontSize: 12 }}>Embed URL</label>
                     <input
                       value={editData.embed_url || ''}
@@ -770,6 +791,9 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, status, setStatus }) 
                   </p>
                   <p style={{ margin: '0 0 12px 0', color: '#888', fontSize: 12, maxHeight: 60, overflow: 'hidden' }}>
                     {a.embed_url ? '▶️ ' + a.embed_url : 'Chưa có video'}
+                  </p>
+                  <p style={{ margin: '0 0 12px 0', color: '#9aa', fontSize: 12 }}>
+                    Genre: {a.genre || '-'}
                   </p>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="btn" onClick={() => handleEdit(a)} style={{ fontSize: 12, flex: 1 }}>✏️ Sửa</button>
