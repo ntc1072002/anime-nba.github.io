@@ -343,9 +343,9 @@ export default function Admin() {
             <button type="button" className={`tab-button ${tab === 'episodes' ? 'active' : ''}`} onClick={() => setTab('episodes')}>🎞️ Thêm tập</button>
             {isOwner && (
               <>
-                <button type="button" className={`tab-button ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>Người dùng</button>
-                <button type="button" className={`tab-button ${tab === 'roles' ? 'active' : ''}`} onClick={() => setTab('roles')}>Vai trò</button>
-                <button type="button" className={`tab-button ${tab === 'permissions' ? 'active' : ''}`} onClick={() => setTab('permissions')}>Quyền</button>
+                <button type="button" className={`tab-button ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>👤 Người dùng</button>
+                <button type="button" className={`tab-button ${tab === 'roles' ? 'active' : ''}`} onClick={() => setTab('roles')}>⭐ Vai trò</button>
+                <button type="button" className={`tab-button ${tab === 'permissions' ? 'active' : ''}`} onClick={() => setTab('permissions')}>🚫 Quyền</button>
               </>
             )}
           </div>

@@ -178,8 +178,8 @@ export default function Header() {
             </a>
           ))}
 
-          {user && user.role === "admin" ? (
-            <a href="#/admin" className={`nav-link nav-link-admin ${page === "admin" ? "active" : ""}`}>
+          {user && (user.role === "admin" || user.role === "owner") ? (
+            <a href="#/admin" className={`nav-link nav-link-admin ${page === "admin" || page === "owner" ? "active" : ""}`}>
               Admin
             </a>
           ) : null}
