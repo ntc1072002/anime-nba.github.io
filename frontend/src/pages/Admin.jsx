@@ -352,58 +352,58 @@ export default function Admin() {
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'content' ? 'flex' : 'none', gap: '20px' }}>
-            <div style={{flex: 1}}>
+            <div style={{ flex: 1 }}>
               <AdminAlert status={statusMenu} />
-            <h3>Thêm truyện / anime</h3>
-            <form className="admin-form" onSubmit={handleSubmit}>
-              <div className="form-row">
-                <label>Loại</label>
-                <select value={type} onChange={e => setType(e.target.value)}>
-                  <option value="manga">Truyện (manga)</option>
-                  <option value="anime">Anime (video)</option>
-                </select>
-              </div>
-
-              <div className="form-row">
-                <label>Tiêu đề</label>
-                <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Tiêu đề" required />
-              </div>
-
-
-              <div className="form-row">
-                <label>Ảnh bìa (tùy chọn)</label>
-                <input key={fileKey} type="file" accept="image/*" onChange={e => { const file = e.target.files?.[0]; setCoverFile(file || null); if (file){ const previewUrl = URL.createObjectURL(file); setCoverPreview(previewUrl); } }} required />
-              </div>
-              <div className="form-row">
-                <label>Thể loại</label>
-                <input
-                  value={genre}
-                  onChange={e => setGenre(e.target.value)}
-                  placeholder="Action, Romance, Fantasy..."
-                  required
-                />
-              </div>
-              {/* {type === "manga" ? ( */}
-              <div className="form-row">
-                <label>Mô tả</label>
-                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" required />
-              </div>
-              {type === "anime" ? (
+              <h3>Thêm truyện / anime</h3>
+              <form className="admin-form" onSubmit={handleSubmit}>
                 <div className="form-row">
-                  <label>Embed URL (ví dụ từ YouTube)</label>
-                  <input value={embedUrl} onChange={e => setEmbedUrl(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" required />
+                  <label>Loại</label>
+                  <select value={type} onChange={e => setType(e.target.value)}>
+                    <option value="manga">Truyện (manga)</option>
+                    <option value="anime">Anime (video)</option>
+                  </select>
                 </div>
-              ) : null
-              }
 
-              <div className="form-actions">
-                <button className="btn" type="submit">{type === "manga" ? "Thêm truyện" : "Thêm anime"}</button>
-                <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setFileKey(Date.now()); setEmbedUrl(""); setGenre(""); }}>Đặt lại</button>
-                <div style={{ flex: 1 }} />
-              </div>
-            </form>
+                <div className="form-row">
+                  <label>Tiêu đề</label>
+                  <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Tiêu đề" required />
+                </div>
+
+
+                <div className="form-row">
+                  <label>Ảnh bìa (tùy chọn)</label>
+                  <input key={fileKey} type="file" accept="image/*" onChange={e => { const file = e.target.files?.[0]; setCoverFile(file || null); if (file) { const previewUrl = URL.createObjectURL(file); setCoverPreview(previewUrl); } }} required />
+                </div>
+                <div className="form-row">
+                  <label>Thể loại</label>
+                  <input
+                    value={genre}
+                    onChange={e => setGenre(e.target.value)}
+                    placeholder="Action, Romance, Fantasy..."
+                    required
+                  />
+                </div>
+                {/* {type === "manga" ? ( */}
+                <div className="form-row">
+                  <label>Mô tả</label>
+                  <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Mô tả" required />
+                </div>
+                {type === "anime" ? (
+                  <div className="form-row">
+                    <label>Embed URL (ví dụ từ YouTube)</label>
+                    <input value={embedUrl} onChange={e => setEmbedUrl(e.target.value)} placeholder="https://www.youtube.com/embed/xxxx" required />
+                  </div>
+                ) : null
+                }
+
+                <div className="form-actions">
+                  <button className="btn" type="submit">{type === "manga" ? "Thêm truyện" : "Thêm anime"}</button>
+                  <button type="button" className="btn secondary" onClick={() => { setTitle(""); setDescription(""); setFileKey(Date.now()); setEmbedUrl(""); setGenre(""); }}>Đặt lại</button>
+                  <div style={{ flex: 1 }} />
+                </div>
+              </form>
             </div>
-            <div style={{ width: 300, display: 'flex', flexDirection: 'column', alignItems: 'center',justifyContent: 'center', gap: 12}}>
+            <div style={{ width: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
               <img src={coverPreview || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQf4D2oLTISHdovO5LRK4icyWdGu-oyJV8uOA&s'} alt="Image" style={{ maxWidth: '50%', borderRadius: 6, padding: 8 }} />
             </div>
           </div>
@@ -442,34 +442,34 @@ export default function Admin() {
                   <button className="btn" onClick={() => fetchChapters(targetMangaId)}>Tải lại</button>
                 </div>
                 <div className="chapter-list-body">
-                {currentChapters.length === 0 ? (
-                  <p style={{ color: '#666' }}>Chưa có chapter</p>
-                ) : (
-                  <div className="chapter-list-scroll">
-                    {currentChapters.map(c => (
-                      <div key={c.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ flex: 1 }}>
-                          <strong>Chap {c.number}</strong> - <span style={{ color: '#aaa' }}>{c.title || 'Không tiêu đề'}</span>
+                  {currentChapters.length === 0 ? (
+                    <p style={{ color: '#666' }}>Chưa có chapter</p>
+                  ) : (
+                    <div className="chapter-list-scroll">
+                      {currentChapters.map(c => (
+                        <div key={c.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ flex: 1 }}>
+                            <strong>Chap {c.number}</strong> - <span style={{ color: '#aaa' }}>{c.title || 'Không tiêu đề'}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button className="btn" onClick={() => startEditChapter(c)}>
+                              {editingChapterId === c.id ? "Đang sửa" : "Sửa"}
+                            </button>
+                            <button className="btn secondary" onClick={async () => {
+                              if (!confirm('Xóa chapter này?')) return;
+                              try {
+                                const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
+                                if (!res.ok) throw new Error('Failed');
+                                const refreshed = await fetchChapters(targetMangaId);
+                                setStatusChapter({ ok: true, msg: `Đã xóa chapter ${c.number} truyện "${targetMangaId}"` });
+                                if (editingChapterId === c.id) resetChapterForm(refreshed);
+                              } catch (err) { setStatusChapter({ ok: false, msg: err.message }); }
+                            }}>Xóa</button>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button className="btn" onClick={() => startEditChapter(c)}>
-                            {editingChapterId === c.id ? "Đang sửa" : "Sửa"}
-                          </button>
-                          <button className="btn secondary" onClick={async () => {
-                            if (!confirm('Xóa chapter này?')) return;
-                            try {
-                              const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
-                              if (!res.ok) throw new Error('Failed');
-                              const refreshed = await fetchChapters(targetMangaId);
-                              setStatusChapter({ ok: true, msg: `Đã xóa chapter ${c.number} truyện "${targetMangaId}"` });
-                              if (editingChapterId === c.id) resetChapterForm(refreshed);
-                            } catch (err) { setStatusChapter({ ok: false, msg: err.message }); }
-                          }}>Xóa</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -509,34 +509,34 @@ export default function Admin() {
                   <button className="btn" onClick={() => fetchEpisodes(targetAnimeId)}>Tải lại</button>
                 </div>
                 <div className="chapter-list-body">
-                {currentEpisodes.length === 0 ? (
-                  <p style={{ color: '#666' }}>Chưa có tập</p>
-                ) : (
-                  <div className="chapter-list-scroll">
-                    {currentEpisodes.map(ep => (
-                      <div key={ep.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ flex: 1 }}>
-                          <strong>Tập {ep.number}</strong> - <span style={{ color: '#aaa' }}>{ep.title || 'Không tiêu đề'}</span>
+                  {currentEpisodes.length === 0 ? (
+                    <p style={{ color: '#666' }}>Chưa có tập</p>
+                  ) : (
+                    <div className="chapter-list-scroll">
+                      {currentEpisodes.map(ep => (
+                        <div key={ep.id} style={{ background: '#0f0f1a', padding: 8, borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ flex: 1 }}>
+                            <strong>Tập {ep.number}</strong> - <span style={{ color: '#aaa' }}>{ep.title || 'Không tiêu đề'}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <button className="btn" onClick={() => startEditEpisode(ep)}>
+                              {editingEpisodeId === ep.id ? "Đang sửa" : "Sửa"}
+                            </button>
+                            <button className="btn secondary" onClick={async () => {
+                              if (!confirm('Xóa tập này?')) return;
+                              try {
+                                const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
+                                if (!res.ok) throw new Error('Failed');
+                                const refreshed = await fetchEpisodes(targetAnimeId);
+                                setStatusEpisode({ ok: true, msg: `Đã xóa tập ${ep.number} anime "${targetAnimeId}"` });
+                                if (editingEpisodeId === ep.id) resetEpisodeForm(refreshed);
+                              } catch (err) { setStatusEpisode({ ok: false, msg: err.message }); }
+                            }}>Xóa</button>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button className="btn" onClick={() => startEditEpisode(ep)}>
-                            {editingEpisodeId === ep.id ? "Đang sửa" : "Sửa"}
-                          </button>
-                          <button className="btn secondary" onClick={async () => {
-                            if (!confirm('Xóa tập này?')) return;
-                            try {
-                              const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
-                              if (!res.ok) throw new Error('Failed');
-                              const refreshed = await fetchEpisodes(targetAnimeId);
-                              setStatusEpisode({ ok: true, msg: `Đã xóa tập ${ep.number} anime "${targetAnimeId}"` });
-                              if (editingEpisodeId === ep.id) resetEpisodeForm(refreshed);
-                            } catch (err) { setStatusEpisode({ ok: false, msg: err.message }); }
-                          }}>Xóa</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -582,9 +582,9 @@ export default function Admin() {
               <AdminAlert tone="warning"><strong>Chỉ Owner mới có quyền truy cập mục này.</strong></AdminAlert>
             )}
           </div>
-          </div>
         </div>
       </div>
+    </div>
   );
 }
 
@@ -1163,6 +1163,9 @@ function RolesManagementPanel() {
     if (!newRole.id || !newRole.name) {
       setStatusRole({ ok: false, msg: 'ID và Name không được để trống' });
       return;
+    }else if (roles.some(r => r.id === newRole.id)) {
+      setStatusRole({ ok: false, msg: 'ID đã tồn tại, chọn ID khác' });
+      return;
     }
     setStatusRole(null);
     try {
@@ -1194,6 +1197,7 @@ function RolesManagementPanel() {
       setStatusRole({ ok: true, msg: `Role cập nhật: ${data.name}` });
       setRoles(prev => prev.map(r => r.id === roleId ? data : r));
       setEditingRoleId(null);
+      setNewRole({ id: '', name: '', description: '', permissions: [] });
     } catch (err) {
       setStatusRole({ ok: false, msg: err.message });
     }
@@ -1218,18 +1222,18 @@ function RolesManagementPanel() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div>
           <h4>Tạo Role Mới</h4>
-          <form onSubmit={createRole} className="admin-form">
+          <form className="admin-form">
             <div className="form-row">
               <label>ID vai trò:</label>
-              <input value={newRole.id} onChange={e => setNewRole({...newRole, id: e.target.value})} placeholder="vip2024" />
+              <input value={newRole.id} onChange={e => setNewRole({ ...newRole, id: e.target.value })} placeholder="vip2024" />
             </div>
             <div className="form-row">
               <label>Tên vai trò:</label>
-              <input value={newRole.name} onChange={e => setNewRole({...newRole, name: e.target.value})} placeholder="VIP 2024" />
+              <input value={newRole.name} onChange={e => setNewRole({ ...newRole, name: e.target.value })} placeholder="VIP 2024" />
             </div>
             <div className="form-row">
               <label>Mô tả:</label>
-              <input value={newRole.description} onChange={e => setNewRole({...newRole, description: e.target.value})} placeholder="Mô tả..." />
+              <input value={newRole.description} onChange={e => setNewRole({ ...newRole, description: e.target.value })} placeholder="Mô tả..." />
             </div>
             <div className="form-row">
               <label>Quyền:</label>
@@ -1251,7 +1255,7 @@ function RolesManagementPanel() {
                 ))}
               </div>
             </div>
-            <button type="submit" className="btn" style={{ width: '100%' }}>➕ Tạo Role</button>
+            <button type="submit" onClick={editingRoleId ? () => updateRole(newRole.id, newRole) : createRole} className="btn" style={{ width: '100%' }}>➕ {editingRoleId ? 'Cập nhật Role' : 'Tạo Role'}</button>
           </form>
         </div>
 
@@ -1266,7 +1270,15 @@ function RolesManagementPanel() {
                   <div style={{ fontSize: 11, color: '#9a9', marginBottom: 6 }}>Số quyền: {r.permissions?.length || 0}</div>
                   {!r.is_system && (
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn" onClick={() => setEditingRoleId(editingRoleId === r.id ? null : r.id)} style={{ fontSize: 11, flex: 1 }}>
+                      <button className="btn" onClick={() => {
+                        if (editingRoleId === r.id) {
+                          setEditingRoleId(null);
+                          setNewRole({ ...newRole, id: '', name: '', description: '', permissions: [] });
+                        } else {
+                          setEditingRoleId(r.id);
+                          setNewRole({ ...newRole, id: r.id , name: r.name, description: r.description, permissions: r.permissions || [] });
+                        }
+                      }} style={{ fontSize: 11, flex: 1 }}>
                         {editingRoleId === r.id ? '✕' : '✏️'}
                       </button>
                       <button className="btn secondary" onClick={() => deleteRole(r.id, r.name)} style={{ fontSize: 11, flex: 1 }}>🗑️</button>
@@ -1331,7 +1343,7 @@ function PermissionsManagementPanel() {
     try {
       const res = await authFetch(`${API_BASE}/api/admin/permissions/${permId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error((await res.json()).error || 'Thất bại');
-      setStatusPerm ({ ok: true, msg: `Đã xóa quyền: ${permName}` });
+      setStatusPerm({ ok: true, msg: `Đã xóa quyền: ${permName}` });
       setPermissions(prev => prev.filter(p => p.id !== permId));
     } catch (err) {
       setStatusPerm({ ok: false, msg: err.message });
@@ -1347,19 +1359,19 @@ function PermissionsManagementPanel() {
           <form onSubmit={createPermission} className="admin-form">
             <div className="form-row">
               <label>ID quyền:</label>
-              <input value={newPerm.id} onChange={e => setNewPerm({...newPerm, id: e.target.value})} placeholder="view_special_content" />
+              <input value={newPerm.id} onChange={e => setNewPerm({ ...newPerm, id: e.target.value })} placeholder="view_special_content" />
             </div>
             <div className="form-row">
               <label>Tên quyền:</label>
-              <input value={newPerm.name} onChange={e => setNewPerm({...newPerm, name: e.target.value})} placeholder="Xem nội dung đặc biệt" />
+              <input value={newPerm.name} onChange={e => setNewPerm({ ...newPerm, name: e.target.value })} placeholder="Xem nội dung đặc biệt" />
             </div>
             <div className="form-row">
               <label>Mô tả:</label>
-              <input value={newPerm.description} onChange={e => setNewPerm({...newPerm, description: e.target.value})} placeholder="Mô tả..." />
+              <input value={newPerm.description} onChange={e => setNewPerm({ ...newPerm, description: e.target.value })} placeholder="Mô tả..." />
             </div>
             <div className="form-row">
               <label>Danh mục:</label>
-              <select value={newPerm.category} onChange={e => setNewPerm({...newPerm, category: e.target.value})}>
+              <select value={newPerm.category} onChange={e => setNewPerm({ ...newPerm, category: e.target.value })}>
                 <option value="content">Nội dung</option>
                 <option value="admin">Quản trị</option>
                 <option value="user">Người dùng</option>
