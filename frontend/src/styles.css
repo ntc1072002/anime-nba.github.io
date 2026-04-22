@@ -197,6 +197,28 @@ body {
 .btn.secondary { background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted) }
 .form-actions { display:flex; gap:10px; align-items:center }
 .notice { font-size:13px; color:var(--muted) }
+.admin-alert {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.admin-alert-tight {
+  margin-bottom: 8px;
+}
+.admin-alert-success {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.42);
+  color: #d1fae5;
+}
+.admin-alert-error,
+.admin-alert-warning {
+  background: rgba(120, 28, 28, 0.24);
+  border-color: rgba(248, 113, 113, 0.8);
+  color: #fca5a5;
+}
 .password-row {
   display: flex;
   align-items: center;

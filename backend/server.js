@@ -245,7 +245,7 @@ app.get("/api/anime/:id", async (req, res) => {
 });
 
 // CREATE anime
-app.post("/api/anime", authenticateJWT, requireRole('admin'), async (req, res) => {
+app.post("/api/anime", authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const title = String(req.body.title || '').trim();
     if (!title) return res.status(400).json({ error: "title required" });
@@ -267,7 +267,7 @@ app.post("/api/anime", authenticateJWT, requireRole('admin'), async (req, res) =
 });
 
 // UPDATE anime
-app.put("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, res) => {
+app.put("/api/anime/:id", authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const updates = { updated_at: new Date() };
 
@@ -300,7 +300,7 @@ app.put("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, res
 });
 
 // DELETE anime
-app.delete("/api/anime/:id", authenticateJWT, requireRole('admin'), async (req, res) => {
+app.delete("/api/anime/:id", authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     // Delete all episodes first
     const episodesSnap = await firestore.collection('anime').doc(req.params.id).collection('episodes').get();
@@ -335,6 +335,8 @@ function authenticateJWT(req, res, next) {
   if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'unauthorized' });
   try {
     req.user = jwt.verify(auth.slice(7), JWT_SECRET);
+    // NOTE: permissions sẽ được lấy khi cần (lazy load trong các endpoints)
+    // để tránh performance issue với mỗi request
     next();
   } catch {
     res.status(401).json({ error: 'invalid token' });
@@ -354,12 +356,116 @@ async function verifyFirebaseToken(req, res, next) {
 }
 
 
-function requireRole(role) {
+function requireRole(roles) {
+  const roleList = Array.isArray(roles) ? roles : [roles];
   return (req, res, next) => {
-    if (!req.user || req.user.role !== role)
+    if (!req.user || !roleList.includes(req.user.role))
       return res.status(403).json({ error: 'forbidden' });
     next();
   };
+}
+
+function requirePermission(permission) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+    
+    const userPermissions = req.user.permissions || [];
+    const hasPermission = userPermissions.includes(permission);
+    
+    if (!hasPermission) {
+      return res.status(403).json({ error: 'permission denied' });
+    }
+    next();
+  };
+}
+
+async function getUserPermissions(userId) {
+  try {
+    const userDoc = await firestore.collection('users').doc(userId).get();
+    if (!userDoc.exists) return [];
+    
+    const data = userDoc.data();
+    const customPermissions = data.permissions || [];
+    const roleId = data.role || 'user';
+    
+    const roleDoc = await firestore.collection('roles').doc(roleId).get();
+    if (!roleDoc.exists) return customPermissions;
+    
+    const rolePermissions = roleDoc.data().permissions || [];
+    return Array.from(new Set([...rolePermissions, ...customPermissions]));
+  } catch (err) {
+    console.error('getUserPermissions error:', err);
+    return [];
+  }
+}
+
+async function seedDefaultRolesAndPermissions() {
+  try {
+    const rolesCollection = firestore.collection('roles');
+    const permissionsCollection = firestore.collection('permissions');
+    
+    const defaultPermissions = [
+      { id: 'view_vip_content', name: 'Xem Nội Dung VIP', description: 'Cho phép xem anime VIP, truyện VIP', category: 'content' },
+      { id: 'manage_users', name: 'Quản Lý Users', description: 'Thay đổi role, permissions của users', category: 'admin' },
+      { id: 'manage_roles', name: 'Quản Lý Roles', description: 'Tạo, sửa, xóa roles', category: 'admin' },
+      { id: 'manage_permissions', name: 'Quản Lý Permissions', description: 'Tạo, sửa, xóa permissions', category: 'admin' },
+      { id: 'manage_content', name: 'Quản Lý Nội Dung', description: 'Thêm, sửa, xóa anime/manga/chapters', category: 'content' },
+      { id: 'view_anime_vip', name: 'Xem Anime VIP', description: 'Xem các anime dành cho VIP', category: 'content' },
+      { id: 'view_manga_vip', name: 'Xem Manga VIP', description: 'Xem các truyện dành cho VIP', category: 'content' }
+    ];
+
+    const defaultRoles = [
+      {
+        id: 'owner',
+        name: 'Chủ Sở Hữu',
+        description: 'Quản lý toàn bộ hệ thống',
+        level: 100,
+        permissions: ['view_vip_content', 'manage_users', 'manage_roles', 'manage_permissions', 'manage_content', 'view_anime_vip', 'view_manga_vip'],
+        is_system: true
+      },
+      {
+        id: 'vip',
+        name: 'VIP',
+        description: 'Người dùng VIP - Truy cập nội dung VIP',
+        level: 50,
+        permissions: ['view_vip_content', 'view_anime_vip', 'view_manga_vip'],
+        is_system: true
+      },
+      {
+        id: 'user',
+        name: 'Người Dùng Bình Thường',
+        description: 'Người dùng bình thường',
+        level: 10,
+        permissions: [],
+        is_system: true
+      }
+    ];
+
+    for (const perm of defaultPermissions) {
+      const existingPerm = await permissionsCollection.doc(perm.id).get();
+      if (!existingPerm.exists) {
+        await permissionsCollection.doc(perm.id).set({
+          ...perm,
+          created_at: new Date()
+        });
+        console.log(`✅ Created permission: ${perm.id}`);
+      }
+    }
+
+    for (const role of defaultRoles) {
+      const existingRole = await rolesCollection.doc(role.id).get();
+      if (!existingRole.exists) {
+        await rolesCollection.doc(role.id).set({
+          ...role,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+        console.log(`✅ Created role: ${role.id}`);
+      }
+    }
+  } catch (err) {
+    console.error('seedDefaultRolesAndPermissions error:', err);
+  }
 }
 
 // // ===== REGISTER USER =====
@@ -444,10 +550,30 @@ app.post('/auth/login', async (req, res) => {
       return res.status(404).json({ error: 'user not found' });
     }
 
+    const userData = userDoc.data();
+    const role = userData.role || 'user';
+    const permissions = userData.permissions || [];
+
+    // Generate JWT server token
+    const serverToken = jwt.sign(
+      {
+        id: decoded.uid,
+        username: userData.username,
+        role,
+        permissions
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
     res.json({
-      uid: decoded.uid,
-      username: userDoc.data().username,
-      role: userDoc.data().role
+      token: serverToken,
+      user: {
+        id: decoded.uid,
+        username: userData.username,
+        role,
+        permissions
+      }
     });
 
   } catch (err) {
@@ -467,8 +593,14 @@ app.post('/auth/firebase', verifyFirebaseToken, async (req, res) => {
   const userDoc = await userRef.get();
   if (userDoc.exists) {
     const data = userDoc.data();
-    const token = jwt.sign({ id: uid, username: data.username, role: data.role }, JWT_SECRET);
-    return res.json({ token });
+    const role = data.role || 'user';
+    const permissions = data.permissions || [];
+    const token = jwt.sign(
+      { id: uid, username: data.username, role, permissions },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    return res.json({ token, user: { id: uid, username: data.username, role, permissions } });
   }
 
   // create profile document keyed by uid
@@ -476,13 +608,18 @@ app.post('/auth/firebase', verifyFirebaseToken, async (req, res) => {
     username: email || name || uid,
     password_hash: null,
     role: 'user',
+    permissions: [],
     provider: 'firebase',
     provider_id: uid,
     created_at: new Date()
   });
 
-  const token = jwt.sign({ id: uid, username: email || name, role: 'user' }, JWT_SECRET);
-  res.json({ token });
+  const token = jwt.sign(
+    { id: uid, username: email || name, role: 'user', permissions: [] },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+  res.json({ token, user: { id: uid, username: email || name, role: 'user', permissions: [] } });
 });
 
 
@@ -493,7 +630,7 @@ app.get('/api/manga', async (_, res) => {
 });
 
 
-app.post('/api/manga', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.post('/api/manga', authenticateJWT, requireRole('owner'), async (req, res) => {
   const title = String(req.body.title || '').trim();
   if (!title) return res.status(400).json({ error: 'title required' });
   const genre = String(req.body.genre || '').trim();
@@ -510,7 +647,7 @@ app.post('/api/manga', authenticateJWT, requireRole('admin'), async (req, res) =
 });
 
 // UPDATE manga
-app.put('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.put('/api/manga/:id', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const updates = { updated_at: new Date() };
 
@@ -548,7 +685,7 @@ app.put('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, res
 });
 
 // DELETE manga
-app.delete('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.delete('/api/manga/:id', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     // Delete all chapters and images first
     const chaptersSnap = await firestore.collection('manga').doc(req.params.id).collection('chapters').get();
@@ -563,7 +700,7 @@ app.delete('/api/manga/:id', authenticateJWT, requireRole('admin'), async (req, 
 });
 
 /* ================== CHAPTERS ================== */
-app.post('/api/manga/:id/chapters', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.post('/api/manga/:id/chapters', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     console.log('POST /api/manga/:id/chapters body:', JSON.stringify(req.body).slice(0, 2000));
     const chapterNumber = parsePositiveNumber(req.body.number);
@@ -635,7 +772,7 @@ app.post('/api/manga/:id/chapters', authenticateJWT, requireRole('admin'), async
 });
 
 // UPDATE chapter
-app.put('/api/manga/:id/chapters/:cid', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.put('/api/manga/:id/chapters/:cid', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const { number, title, images } = req.body;
     const updates = { updated_at: new Date() };
@@ -674,7 +811,7 @@ app.put('/api/manga/:id/chapters/:cid', authenticateJWT, requireRole('admin'), a
 });
 
 // DELETE chapter
-app.delete('/api/manga/:id/chapters/:cid', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.delete('/api/manga/:id/chapters/:cid', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     await firestore
       .collection('manga')
@@ -1034,7 +1171,7 @@ app.post('/api/me/like', authenticateJWT, async (req, res) => {
 app.post(
   '/api/manga/:id/chapters/:cid/upload',
   authenticateJWT,
-  requireRole('admin'),
+  requireRole('owner'),
   upload.array('images'),
   async (req, res) => {
     const urls = [];
@@ -1061,7 +1198,7 @@ app.post(
 import FormData from "form-data";
 import axios from "axios";
 // Upload cover image for manga to Imgbb
-app.post('/api/manga/:id/cover', authenticateJWT, requireRole('admin'), upload.single('image'), async (req, res) => {
+app.post('/api/manga/:id/cover', authenticateJWT, requireRole('owner'), upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'image required' });
     if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
@@ -1143,7 +1280,7 @@ app.get('/api/recommendations', async (req, res) => {
 });
 
 // Upload cover image for anime to Imgbb
-app.post('/api/anime/:id/cover', authenticateJWT, requireRole('admin'), upload.single('image'), async (req, res) => {
+app.post('/api/anime/:id/cover', authenticateJWT, requireRole('owner'), upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'image required' });
     if (!process.env.IMGBB_API_KEY) return res.status(500).json({ error: 'IMGBB_API_KEY not configured' });
@@ -1171,7 +1308,7 @@ app.post('/api/anime/:id/cover', authenticateJWT, requireRole('admin'), upload.s
 });
 
 // CREATE episode (already used by admin form but ensure exists)
-app.post('/api/anime/:id/episodes', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.post('/api/anime/:id/episodes', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const episodeNumber = parsePositiveNumber(req.body.number);
     if (!episodeNumber) return res.status(400).json({ error: 'number must be a positive number' });
@@ -1209,7 +1346,7 @@ app.post('/api/anime/:id/episodes', authenticateJWT, requireRole('admin'), async
 });
 
 // UPDATE episode
-app.put('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.put('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const { number, title, embed_url } = req.body;
     const updates = { updated_at: new Date() };
@@ -1248,7 +1385,7 @@ app.put('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('admin'), a
 });
 
 // DELETE episode
-app.delete('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('admin'), async (req, res) => {
+app.delete('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     await firestore
       .collection('anime')
@@ -1263,20 +1400,181 @@ app.delete('/api/anime/:id/episodes/:eid', authenticateJWT, requireRole('admin')
   }
 });
 
-/*
-  Ghi chú lưu trữ ảnh bìa:
-  - Ảnh bìa được lưu vào Firebase Storage (bucket được cấu hình trong admin.initializeApp).
-  - File được public và URL công khai lưu vào trường `cover_url` trong document Firestore tương ứng.
+/* ================== ADMIN - ROLES ================== */
+app.get('/api/admin/roles', authenticateJWT, requireRole('owner'), async (_, res) => {
+  try {
+    const snap = await firestore.collection('roles').get();
+    const roles = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      created_at: d.data().created_at?.toDate?.()?.toISOString?.() || null,
+      updated_at: d.data().updated_at?.toDate?.()?.toISOString?.() || null
+    }));
+    res.json(roles);
+  } catch (err) {
+    console.error('GET /api/admin/roles error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
-  Về yêu cầu lưu vào Google Drive:
-  - Về kỹ thuật có thể tải file lên Google Drive bằng API, nhưng cần OAuth 2.0 (user consent) hoặc cấu hình service account với quyền truy cập thư mục cụ thể.
-  - Lưu trực tiếp lên Drive làm nơi lưu tập trung có thể phức tạp hơn (phải quản lý chia sẻ/permission, quota, refresh tokens). Thay vào đó khuyến nghị sử dụng Firebase Storage / Google Cloud Storage (đã tích hợp sẵn với Firebase Admin) vì dễ quản lý, tối ưu cho static assets và tương thích với ứng dụng hiện tại.
-  - Nếu bạn muốn tôi triển khai lưu thêm lên Google Drive, tôi có thể thêm endpoint upload Drive (yêu cầu bạn cung cấp credentials và quyết định sử dụng service account hay OAuth flow).
-*/
+app.post('/api/admin/roles', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { id, name, description, permissions } = req.body;
+    if (!id || !name) return res.status(400).json({ error: 'id and name required' });
+    if (id === 'owner' || id === 'vip' || id === 'user') {
+      return res.status(400).json({ error: 'Cannot create system roles' });
+    }
+
+    const permArray = Array.isArray(permissions) ? permissions : [];
+    const newRole = {
+      id,
+      name,
+      description: description || '',
+      level: 25,
+      permissions: permArray,
+      is_system: false,
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    await firestore.collection('roles').doc(id).set(newRole);
+    res.status(201).json(newRole);
+  } catch (err) {
+    console.error('POST /api/admin/roles error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/roles/:roleId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { roleId } = req.params;
+    if (roleId === 'owner' || roleId === 'vip' || roleId === 'user') {
+      return res.status(400).json({ error: 'Cannot modify system roles' });
+    }
+
+    const { name, description, permissions, level } = req.body;
+    const updates = { updated_at: new Date() };
+
+    if (name) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (Array.isArray(permissions)) updates.permissions = permissions;
+    if (level !== undefined) updates.level = level;
+
+    await firestore.collection('roles').doc(roleId).update(updates);
+    const doc = await firestore.collection('roles').doc(roleId).get();
+    
+    res.json({
+      id: doc.id,
+      ...doc.data(),
+      created_at: doc.data().created_at?.toDate?.()?.toISOString?.() || null,
+      updated_at: doc.data().updated_at?.toDate?.()?.toISOString?.() || null
+    });
+  } catch (err) {
+    console.error('PUT /api/admin/roles/:roleId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admin/roles/:roleId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { roleId } = req.params;
+    if (roleId === 'owner' || roleId === 'vip' || roleId === 'user') {
+      return res.status(400).json({ error: 'Cannot delete system roles' });
+    }
+
+    // Check if any user has this role
+    const usersWithRole = await firestore.collection('users')
+      .where('role', '==', roleId)
+      .limit(1)
+      .get();
+
+    if (!usersWithRole.empty) {
+      return res.status(400).json({ error: 'Cannot delete role with assigned users' });
+    }
+
+    await firestore.collection('roles').doc(roleId).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/admin/roles/:roleId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ================== ADMIN - PERMISSIONS ================== */
+app.get('/api/admin/permissions', authenticateJWT, requireRole('owner'), async (_, res) => {
+  try {
+    const snap = await firestore.collection('permissions').get();
+    const permissions = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      created_at: d.data().created_at?.toDate?.()?.toISOString?.() || null
+    }));
+    res.json(permissions);
+  } catch (err) {
+    console.error('GET /api/admin/permissions error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/permissions', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { id, name, description, category } = req.body;
+    if (!id || !name) return res.status(400).json({ error: 'id and name required' });
+
+    const newPerm = {
+      id,
+      name,
+      description: description || '',
+      category: category || 'custom',
+      created_at: new Date()
+    };
+
+    await firestore.collection('permissions').doc(id).set(newPerm);
+    res.status(201).json(newPerm);
+  } catch (err) {
+    console.error('POST /api/admin/permissions error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/permissions/:permissionId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { permissionId } = req.params;
+    const { name, description, category } = req.body;
+    const updates = {};
+
+    if (name) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (category) updates.category = category;
+
+    await firestore.collection('permissions').doc(permissionId).update(updates);
+    const doc = await firestore.collection('permissions').doc(permissionId).get();
+
+    res.json({
+      id: doc.id,
+      ...doc.data(),
+      created_at: doc.data().created_at?.toDate?.()?.toISOString?.() || null
+    });
+  } catch (err) {
+    console.error('PUT /api/admin/permissions/:permissionId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admin/permissions/:permissionId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { permissionId } = req.params;
+    await firestore.collection('permissions').doc(permissionId).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/admin/permissions/:permissionId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 /* ================== ADMIN - USERS ================== */
-// Get all users (admin only)
-app.get('/api/admin/users', authenticateJWT, requireRole('admin'), async (_, res) => {
+// Get all users (owner only)
+app.get('/api/admin/users', authenticateJWT, requireRole('owner'), async (_, res) => {
   try {
     const snap = await firestore.collection('users').get();
     const users = snap.docs.map(d => {
@@ -1286,8 +1584,12 @@ app.get('/api/admin/users', authenticateJWT, requireRole('admin'), async (_, res
         username: data.username || data.email || d.id,
         email: data.email,
         role: data.role || 'user',
+        permissions: data.permissions || [],
         created_at: data.created_at
           ? data.created_at.toDate().toISOString()
+          : null,
+        updated_at: data.updated_at
+          ? data.updated_at.toDate().toISOString()
           : null
       };
     });
@@ -1298,22 +1600,105 @@ app.get('/api/admin/users', authenticateJWT, requireRole('admin'), async (_, res
   }
 });
 
-// Update user role (admin only)
-app.patch('/api/admin/users/:userId/role', authenticateJWT, requireRole('admin'), async (req, res) => {
+// Update user role (owner only)
+app.patch('/api/admin/users/:userId/role', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const { userId } = req.params;
     const { role } = req.body;
-    if (!role || !['admin', 'user'].includes(role)) {
+    if (!role) {
+      return res.status(400).json({ error: 'role required' });
+    }
+
+    const roleDoc = await firestore.collection('roles').doc(role).get();
+    if (!roleDoc.exists) {
       return res.status(400).json({ error: 'Invalid role' });
     }
-    await firestore.collection('users').doc(userId).update({ role });
+
+    await firestore.collection('users').doc(userId).update({ 
+      role,
+      updated_at: new Date()
+    });
+
     const userDoc = await firestore.collection('users').doc(userId).get();
-    res.json({ id: userId, username: userDoc.data()?.email, role });
+    const userData = userDoc.data();
+
+    res.json({
+      id: userId,
+      username: userData?.username || userData?.email,
+      email: userData?.email,
+      role: userData?.role,
+      permissions: userData?.permissions || []
+    });
   } catch (err) {
     console.error('PATCH /api/admin/users/:userId/role error', err);
     res.status(500).json({ error: err.message });
   }
 });
+
+// Update user permissions (owner only)
+app.patch('/api/admin/users/:userId/permissions', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { permissions } = req.body;
+    
+    if (!Array.isArray(permissions)) {
+      return res.status(400).json({ error: 'permissions must be an array' });
+    }
+
+    await firestore.collection('users').doc(userId).update({
+      permissions,
+      updated_at: new Date()
+    });
+
+    const userDoc = await firestore.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+
+    res.json({
+      id: userId,
+      username: userData?.username || userData?.email,
+      email: userData?.email,
+      role: userData?.role,
+      permissions: userData?.permissions || []
+    });
+  } catch (err) {
+    console.error('PATCH /api/admin/users/:userId/permissions error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete user (owner only)
+app.delete('/api/admin/users/:userId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user.id;
+
+    if (userId === currentUserId) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+
+    // Check if user is the last owner
+    const userDoc = await firestore.collection('users').doc(userId).get();
+    if (userDoc.data()?.role === 'owner') {
+      const otherOwners = await firestore.collection('users')
+        .where('role', '==', 'owner')
+        .limit(2)
+        .get();
+      if (otherOwners.size <= 1) {
+        return res.status(400).json({ error: 'Cannot delete the last owner' });
+      }
+    }
+
+    await firestore.collection('users').doc(userId).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/admin/users/:userId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ================== INIT SERVER ================== */
+// Seed default roles and permissions on startup
+seedDefaultRolesAndPermissions().catch(err => console.error('Seed error:', err));
 
 /* ================== HEALTH ================== */
 app.get('/health', (_, res) => res.json({ ok: true }));
