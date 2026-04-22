@@ -47,6 +47,7 @@ export default function Admin() {
   const [description, setDescription] = useState("");
   const [embedUrl, setEmbedUrl] = useState("");
   const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
   const [status, setStatus] = useState(null);
   const [statusMenu, setStatusMenu] = useState(null);
   const [statusManga, setStatusManga] = useState(null);
@@ -350,8 +351,9 @@ export default function Admin() {
             )}
           </div>
 
-          <div className="tab-panel" style={{ display: tab === 'content' ? 'block' : 'none' }}>
-            <AdminAlert status={statusMenu} />
+          <div className="tab-panel" style={{ display: tab === 'content' ? 'flex' : 'none', gap: '20px' }}>
+            <div style={{flex: 1}}>
+              <AdminAlert status={statusMenu} />
             <h3>Thêm truyện / anime</h3>
             <form className="admin-form" onSubmit={handleSubmit}>
               <div className="form-row">
@@ -370,7 +372,7 @@ export default function Admin() {
 
               <div className="form-row">
                 <label>Ảnh bìa (tùy chọn)</label>
-                <input key={fileKey} type="file" accept="image/*" onChange={e => { setCoverFile(e.target.files?.[0] || null); }} required />
+                <input key={fileKey} type="file" accept="image/*" onChange={e => { const file = e.target.files?.[0]; setCoverFile(file || null); if (file){ const previewUrl = URL.createObjectURL(file); setCoverPreview(previewUrl); } }} required />
               </div>
               <div className="form-row">
                 <label>Thể loại</label>
@@ -400,6 +402,10 @@ export default function Admin() {
                 <div style={{ flex: 1 }} />
               </div>
             </form>
+            </div>
+            <div style={{ width: 300, display: 'flex', flexDirection: 'column', alignItems: 'center',justifyContent: 'center', gap: 12}}>
+              <img src={coverPreview || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQf4D2oLTISHdovO5LRK4icyWdGu-oyJV8uOA&s'} alt="Image" style={{ maxWidth: '50%', borderRadius: 6, padding: 8 }} />
+            </div>
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'chapters' ? 'block' : 'none' }}>
@@ -1060,10 +1066,10 @@ function UsersManagementPanel() {
         <div>
           {selectedUserData ? (
             <div style={{ background: '#0f0f1a', padding: 16, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }}>
-              <h4 style={{ marginTop: 0 }}>Chỉnh sửa: {selectedUserData.username}</h4>
+              <h4 style={{ marginTop: 0 }}>Chỉnh sửa</h4>
               <div className="form-row" style={{ marginBottom: 12 }}>
-                <label>Email:</label>
-                <input type="email" value={selectedUserData.email || ''} disabled style={{ opacity: 0.6 }} />
+                <label>Name:</label>
+                <input type="text" value={selectedUserData.username || ''} disabled style={{ opacity: 0.6 }} />
               </div>
 
               <div className="form-row" style={{ marginBottom: 12 }}>
