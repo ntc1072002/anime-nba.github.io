@@ -1075,7 +1075,7 @@ function UsersManagementPanel() {
 
               <div className="form-row" style={{ marginBottom: 12 }}>
                 <label>Role:</label>
-                <input type="text" value={selectedUserData.role || ''} />
+                <input type="text" value={selectedUserData.role || ''} disabled style={{ opacity: 0.6 }} />
               </div>
 
               <div className="form-row" style={{ marginBottom: 12 }}>
