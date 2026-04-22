@@ -543,11 +543,11 @@ export default function Admin() {
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'mangas' ? 'block' : 'none' }}>
-            <MangaManagementPanel mangaList={mangaList} fetchMangaList={fetchMangaList} status={statusManga} setStatusManga={setStatusManga} />
+            <MangaManagementPanel mangaList={mangaList} fetchMangaList={fetchMangaList} statusManga={statusManga} setStatusManga={setStatusManga} />
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'animes' ? 'block' : 'none' }}>
-            <AnimeManagementPanel animeList={animeList} fetchAnimeList={fetchAnimeList} status={statusAnime} setStatusAnime={setStatusAnime} />
+            <AnimeManagementPanel animeList={animeList} fetchAnimeList={fetchAnimeList} statusAnime={statusAnime} setStatusAnime={setStatusAnime} />
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'users' ? 'block' : 'none' }}>
@@ -609,7 +609,7 @@ function MangaManagementPanel({ mangaList, fetchMangaList, statusManga, setStatu
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Cập nhật thất bại');
-      setStatusManga({ ok: true, msg: `Truyện cập nhật (${editData.title})` });
+      setStatusManga({ ok: true, msg: `Truyện cập nhật "${editData.title}"` });
       setEditId(null);
       fetchMangaList();
     } catch (err) {
@@ -644,7 +644,7 @@ function MangaManagementPanel({ mangaList, fetchMangaList, statusManga, setStatu
         }
       }
 
-      setStatusManga({ ok: true, msg: `Truyện cập nhật (${editData.title})` });
+      setStatusManga({ ok: true, msg: `Truyện cập nhật "${editData.title}"` });
       setEditId(null);
       setEditData({});
       fetchMangaList();
@@ -768,6 +768,7 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, statusAnime, setStatu
 
   // Enhanced save for anime: update metadata and upload cover if provided
   const handleSaveWithCoverAnime = async (id) => {
+    setStatusAnime(null);
     try {
       const res = await authFetch(`${API_BASE}/api/anime/${id}`, {
         method: 'PUT',
@@ -791,11 +792,11 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, statusAnime, setStatu
         }
       }
 
-      setStatusAnime({ ok: true, msg: `Anime cập nhật (${editData.title})` });
+      setStatusAnime({ ok: true, msg: `Anime cập nhật "${editData.title}` });
       setEditId(null);
       setEditData({});
       fetchAnimeList();
-    } catch (err) {
+    } catch (err) { 
       setStatusAnime({ ok: false, msg: err.message });
     }
   };
@@ -808,7 +809,7 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, statusAnime, setStatu
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Cập nhật thất bại');
-      setStatusAnime({ ok: true, msg: `Anime cập nhật (${editData.title})` });
+      setStatusAnime({ ok: true, msg: `Anime cập nhật "${editData.title}"` });
       setEditId(null);
       fetchAnimeList();
     } catch (err) {
@@ -1070,6 +1071,11 @@ function UsersManagementPanel() {
               <div className="form-row" style={{ marginBottom: 12 }}>
                 <label>Name:</label>
                 <input type="text" value={selectedUserData.username || ''} disabled style={{ opacity: 0.6 }} />
+              </div>
+
+              <div className="form-row" style={{ marginBottom: 12 }}>
+                <label>Role:</label>
+                <input type="text" value={selectedUserData.role || ''} />
               </div>
 
               <div className="form-row" style={{ marginBottom: 12 }}>
