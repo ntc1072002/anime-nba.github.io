@@ -455,7 +455,7 @@ export default function Admin() {
                               const res = await authFetch(`${API_BASE}/api/manga/${targetMangaId}/chapters/${c.id}`, { method: 'DELETE' });
                               if (!res.ok) throw new Error('Failed');
                               const refreshed = await fetchChapters(targetMangaId);
-                              setStatusChapter({ ok: true, msg: `Đã xóa chapter` });
+                              setStatusChapter({ ok: true, msg: `Đã xóa chapter ${c.number} truyện "${targetMangaId}"` });
                               if (editingChapterId === c.id) resetChapterForm(refreshed);
                             } catch (err) { setStatusChapter({ ok: false, msg: err.message }); }
                           }}>Xóa</button>
@@ -522,7 +522,7 @@ export default function Admin() {
                               const res = await authFetch(`${API_BASE}/api/anime/${targetAnimeId}/episodes/${ep.id}`, { method: 'DELETE' });
                               if (!res.ok) throw new Error('Failed');
                               const refreshed = await fetchEpisodes(targetAnimeId);
-                              setStatusEpisode({ ok: true, msg: `Đã xóa tập` });
+                              setStatusEpisode({ ok: true, msg: `Đã xóa tập ${ep.number} anime "${targetAnimeId}"` });
                               if (editingEpisodeId === ep.id) resetEpisodeForm(refreshed);
                             } catch (err) { setStatusEpisode({ ok: false, msg: err.message }); }
                           }}>Xóa</button>
@@ -537,11 +537,11 @@ export default function Admin() {
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'mangas' ? 'block' : 'none' }}>
-            <MangaManagementPanel mangaList={mangaList} fetchMangaList={fetchMangaList} status={status} setStatusManga={setStatusManga} />
+            <MangaManagementPanel mangaList={mangaList} fetchMangaList={fetchMangaList} status={statusManga} setStatusManga={setStatusManga} />
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'animes' ? 'block' : 'none' }}>
-            <AnimeManagementPanel animeList={animeList} fetchAnimeList={fetchAnimeList} status={status} setStatusAnime={setStatusAnime} />
+            <AnimeManagementPanel animeList={animeList} fetchAnimeList={fetchAnimeList} status={statusAnime} setStatusAnime={setStatusAnime} />
           </div>
 
           <div className="tab-panel" style={{ display: tab === 'users' ? 'block' : 'none' }}>
@@ -603,7 +603,6 @@ function MangaManagementPanel({ mangaList, fetchMangaList, statusManga, setStatu
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Cập nhật thất bại');
-      setStatusManga(null);
       setStatusManga({ ok: true, msg: `Truyện cập nhật (${editData.title})` });
       setEditId(null);
       fetchMangaList();
@@ -653,7 +652,7 @@ function MangaManagementPanel({ mangaList, fetchMangaList, statusManga, setStatu
     try {
       const res = await authFetch(`/api/manga/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Xóa thất bại');
-      setStatusManga({ ok: true, msg: 'Truyện đã xóa' });
+      setStatusManga({ ok: true, msg: `Truyện "${editData.title}" đã xóa` });
       fetchMangaList();
     } catch (err) {
       setStatusManga({ ok: false, msg: err.message });
@@ -816,7 +815,7 @@ function AnimeManagementPanel({ animeList, fetchAnimeList, statusAnime, setStatu
     try {
       const res = await authFetch(`${API_BASE}/api/anime/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Xóa thất bại');
-      setStatusAnime({ ok: true, msg: 'Anime đã xóa' });
+      setStatusAnime({ ok: true, msg: `Anime "${editData.title}" đã xóa` });
       fetchAnimeList();
     } catch (err) {
       setStatusAnime({ ok: false, msg: err.message });
