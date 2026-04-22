@@ -1163,8 +1163,11 @@ function RolesManagementPanel() {
     if (!newRole.id || !newRole.name) {
       setStatusRole({ ok: false, msg: 'ID và Name không được để trống' });
       return;
-    }else if (roles.some(r => r.id === newRole.id)) {
+    }else if (roles.some(r => r.id === newRole.id) ) {
       setStatusRole({ ok: false, msg: 'ID đã tồn tại, chọn ID khác' });
+      return;
+    }else if (roles.some(r => r.name === newRole.name) ) {
+      setStatusRole({ ok: false, msg: 'Name đã tồn tại, chọn Name khác' });
       return;
     }
     setStatusRole(null);
