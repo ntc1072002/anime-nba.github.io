@@ -1417,6 +1417,34 @@ app.get('/api/admin/roles', authenticateJWT, requireRole('owner'), async (_, res
   }
 });
 
+app.get('/api/admin/roles/:roleId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { roleId } = req.params;
+    const doc = await firestore.collection('roles').doc(roleId).get();
+    
+    if (!doc.exists) {
+      return res.json({
+        id: roleId,
+        name: roleId,
+        permissions: [],
+        is_system: true,
+        error: 'System role or not found'
+      });
+    }
+    
+    res.json({
+      id: doc.id,
+      ...doc.data(),
+      permissions: doc.data().permissions || [],
+      created_at: doc.data().created_at?.toDate?.()?.toISOString?.() || null,
+      updated_at: doc.data().updated_at?.toDate?.()?.toISOString?.() || null
+    });
+  } catch (err) {
+    console.error('GET /api/admin/roles/:roleId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/admin/roles', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
     const { id, name, description, permissions } = req.body;

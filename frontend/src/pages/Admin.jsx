@@ -57,6 +57,7 @@ export default function Admin() {
   const [statusUser, setStatusUser] = useState(null);
   const [statusRole, setStatusRole] = useState(null);
   const [statusPerm, setStatusPerm] = useState(null);
+  const [statusFeat, setStatusFeat] = useState(null);
 
   const currentUser = getUserFromToken();
   const isOwner = currentUser?.role === 'owner';
@@ -347,6 +348,7 @@ export default function Admin() {
                 <button type="button" className={`tab-button ${tab === 'users' ? 'active' : ''}`} onClick={() => setTab('users')}>👤 Người dùng</button>
                 <button type="button" className={`tab-button ${tab === 'roles' ? 'active' : ''}`} onClick={() => setTab('roles')}>⭐ Vai trò</button>
                 <button type="button" className={`tab-button ${tab === 'permissions' ? 'active' : ''}`} onClick={() => setTab('permissions')}>🚫 Quyền</button>
+                <button type="button" className={`tab-button ${tab === 'features' ? 'active' : ''}`} onClick={() => setTab('features')}>🎯 Tính Năng</button>
               </>
             )}
           </div>
@@ -577,6 +579,17 @@ export default function Admin() {
               <>
                 <h3>Quyền</h3>
                 <PermissionsManagementPanel />
+              </>
+            ) : (
+              <AdminAlert tone="warning"><strong>Chỉ Owner mới có quyền truy cập mục này.</strong></AdminAlert>
+            )}
+          </div>
+
+          <div className="tab-panel" style={{ display: tab === 'features' ? 'block' : 'none' }}>
+            {isOwner ? (
+              <>
+                <h3>Tính Năng / Trang</h3>
+                <FeaturesManagementPanel statusFeat={statusFeat} setStatusFeat={setStatusFeat} />
               </>
             ) : (
               <AdminAlert tone="warning"><strong>Chỉ Owner mới có quyền truy cập mục này.</strong></AdminAlert>
@@ -980,9 +993,26 @@ function UsersManagementPanel() {
     fetchPermissions();
   }, []);
 
+  React.useEffect(() => {
+    if (allPermissions.length > 0) {
+      console.log('📊 allPermissions structure:', allPermissions);
+      console.log('📊 First permission object:', allPermissions[0]);
+      console.log('📊 Permission keys:', Object.keys(allPermissions[0] || {}));
+    }
+  }, [allPermissions]);
+
   async function updateUserRole(userId, newRole) {
     setStatusUsers(null);
     try {
+      let rolePermissions = [];
+      
+      // Find role in allRoles list
+      const selectedRole = allRoles.find(r => r.id === newRole);
+      if (selectedRole) {
+        rolePermissions = selectedRole.permissions || [];
+      }
+
+      // Update user role
       const res = await authFetch(`${API_BASE}/api/admin/users/${userId}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -990,9 +1020,33 @@ function UsersManagementPanel() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Thất bại');
-      setStatusUsers({ ok: true, msg: `Role cập nhật: ${data.username} → ${data.role}` });
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...data } : u));
-      if (selectedUserId === userId) setSelectedUserData({ ...selectedUserData, ...data });
+
+      // Automatically apply role permissions to user
+      const permRes = await authFetch(`${API_BASE}/api/admin/users/${userId}/permissions`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permissions: rolePermissions })
+      });
+      const permData = await permRes.json();
+      if (!permRes.ok) throw new Error(permData.error || 'Thất bại');
+
+      const msg = rolePermissions.length > 0 
+        ? `Role cập nhật: ${data.username} → ${data.role} (${rolePermissions.length} quyền tự động cập nhật)`
+        : `Role cập nhật: ${data.username} → ${data.role}`;
+      
+      setStatusUsers({ ok: true, msg });
+      
+      // Create updated user object with role permissions
+      const updatedUser = {
+        ...data,
+        ...permData,
+        permissions: rolePermissions
+      };
+      
+      setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u));
+      if (selectedUserId === userId) {
+        setSelectedUserData(updatedUser);
+      }
     } catch (err) {
       setStatusUsers({ ok: false, msg: err.message });
     }
@@ -1169,10 +1223,10 @@ function RolesManagementPanel() {
     if (!newRole.id || !newRole.name) {
       setStatusRole({ ok: false, msg: 'ID và Name không được để trống' });
       return;
-    }else if (roles.some(r => r.id === newRole.id) ) {
+    } else if (roles.some(r => r.id === newRole.id)) {
       setStatusRole({ ok: false, msg: 'ID đã tồn tại, chọn ID khác' });
       return;
-    }else if (roles.some(r => r.name === newRole.name) ) {
+    } else if (roles.some(r => r.name === newRole.name)) {
       setStatusRole({ ok: false, msg: 'Name đã tồn tại, chọn Name khác' });
       return;
     }
@@ -1193,18 +1247,27 @@ function RolesManagementPanel() {
     }
   }
 
-  async function updateRole(roleId, updates) {
+  async function updateRole(e) {
+    e.preventDefault();
+    if (!editingRoleId || !newRole.name) {
+      setStatusRole({ ok: false, msg: 'Tên không được để trống' });
+      return;
+    }
     setStatusRole(null);
     try {
-      const res = await authFetch(`${API_BASE}/api/admin/roles/${roleId}`, {
+      const res = await authFetch(`${API_BASE}/api/admin/roles/${editingRoleId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
+        body: JSON.stringify({
+          name: newRole.name,
+          description: newRole.description,
+          permissions: newRole.permissions
+        })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Thất bại');
       setStatusRole({ ok: true, msg: `Role cập nhật: ${data.name}` });
-      setRoles(prev => prev.map(r => r.id === roleId ? data : r));
+      setRoles(prev => prev.map(r => r.id === editingRoleId ? data : r));
       setEditingRoleId(null);
       setNewRole({ id: '', name: '', description: '', permissions: [] });
     } catch (err) {
@@ -1220,9 +1283,28 @@ function RolesManagementPanel() {
       if (!res.ok) throw new Error((await res.json()).error || 'Thất bại');
       setStatusRole({ ok: true, msg: `Đã xóa vai trò: ${roleName}` });
       setRoles(prev => prev.filter(r => r.id !== roleId));
+      if (editingRoleId === roleId) {
+        setEditingRoleId(null);
+        setNewRole({ id: '', name: '', description: '', permissions: [] });
+      }
     } catch (err) {
       setStatusRole({ ok: false, msg: err.message });
     }
+  }
+
+  function startEditRole(role) {
+    setEditingRoleId(role.id);
+    setNewRole({
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      permissions: role.permissions || []
+    });
+  }
+
+  function cancelEdit() {
+    setEditingRoleId(null);
+    setNewRole({ id: '', name: '', description: '', permissions: [] });
   }
 
   return (
@@ -1230,19 +1312,33 @@ function RolesManagementPanel() {
       <AdminAlert status={statusRole} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div>
-          <h4>Tạo Role Mới</h4>
-          <form className="admin-form">
+          <h4>{editingRoleId ? 'Sửa Vai Trò' : 'Tạo Vai Trò Mới'}</h4>
+          <form onSubmit={editingRoleId ? updateRole : createRole} className="admin-form">
             <div className="form-row">
               <label>ID vai trò:</label>
-              <input value={newRole.id} onChange={e => setNewRole({ ...newRole, id: e.target.value })} placeholder="vip2024" />
+              <input
+                value={newRole.id}
+                onChange={e => setNewRole({ ...newRole, id: e.target.value })}
+                placeholder="vip2024"
+                disabled={editingRoleId ? true : false}
+                style={{ opacity: editingRoleId ? 0.6 : 1 }}
+              />
             </div>
             <div className="form-row">
               <label>Tên vai trò:</label>
-              <input value={newRole.name} onChange={e => setNewRole({ ...newRole, name: e.target.value })} placeholder="VIP 2024" />
+              <input
+                value={newRole.name}
+                onChange={e => setNewRole({ ...newRole, name: e.target.value })}
+                placeholder="VIP 2024"
+              />
             </div>
             <div className="form-row">
               <label>Mô tả:</label>
-              <input value={newRole.description} onChange={e => setNewRole({ ...newRole, description: e.target.value })} placeholder="Mô tả..." />
+              <input
+                value={newRole.description}
+                onChange={e => setNewRole({ ...newRole, description: e.target.value })}
+                placeholder="Mô tả..."
+              />
             </div>
             <div className="form-row">
               <label>Quyền:</label>
@@ -1264,7 +1360,16 @@ function RolesManagementPanel() {
                 ))}
               </div>
             </div>
-            <button type="submit" onClick={editingRoleId ? () => updateRole(newRole.id, newRole) : createRole} className="btn" style={{ width: '100%' }}>➕ {editingRoleId ? 'Cập nhật Role' : 'Tạo Role'}</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="submit" className="btn" style={{ width: '100%' }}>
+                {editingRoleId ? '💾 Cập nhật Vai Trò' : '➕ Tạo Vai Trò'}
+              </button>
+              {editingRoleId && (
+                <button type="button" className="btn secondary" onClick={cancelEdit} style={{ width: '100%' }}>
+                  ✕ Hủy
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -1273,27 +1378,39 @@ function RolesManagementPanel() {
           {loading ? <p style={{ color: '#666' }}>Đang tải...</p> : (
             <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
               {roles.map(r => (
-                <div key={r.id} style={{ background: '#0f0f1a', padding: 12, margin: '8px 0', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div
+                  key={r.id}
+                  style={{
+                    background: editingRoleId === r.id ? 'rgba(136, 238, 255, 0.1)' : '#0f0f1a',
+                    padding: 12,
+                    margin: '8px 0',
+                    borderRadius: 6,
+                    border: editingRoleId === r.id ? '1px solid #8ef' : '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
                   <div style={{ fontWeight: 'bold', color: r.is_system ? '#f88' : '#8ef', marginBottom: 4 }}>{r.name}</div>
                   <div style={{ color: '#aaa', fontSize: 11, marginBottom: 6 }}>{r.description}</div>
                   <div style={{ fontSize: 11, color: '#9a9', marginBottom: 6 }}>Số quyền: {r.permissions?.length || 0}</div>
-                  {!r.is_system && (
+                  {!r.is_system ? (
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button className="btn" onClick={() => {
-                        if (editingRoleId === r.id) {
-                          setEditingRoleId(null);
-                          setNewRole({ ...newRole, id: '', name: '', description: '', permissions: [] });
-                        } else {
-                          setEditingRoleId(r.id);
-                          setNewRole({ ...newRole, id: r.id , name: r.name, description: r.description, permissions: r.permissions || [] });
-                        }
-                      }} style={{ fontSize: 11, flex: 1 }}>
-                        {editingRoleId === r.id ? '✕' : '✏️'}
+                      <button
+                        className="btn"
+                        onClick={() => startEditRole(r)}
+                        style={{ fontSize: 11, flex: 1 }}
+                      >
+                        ✏️ Sửa
                       </button>
-                      <button className="btn secondary" onClick={() => deleteRole(r.id, r.name)} style={{ fontSize: 11, flex: 1 }}>🗑️</button>
+                      <button
+                        className="btn secondary"
+                        onClick={() => deleteRole(r.id, r.name)}
+                        style={{ fontSize: 11, flex: 1 }}
+                      >
+                        🗑️ Xóa
+                      </button>
                     </div>
+                  ) : (
+                    <div style={{ fontSize: 11, color: '#f88' }}>Vai trò hệ thống</div>
                   )}
-                  {r.is_system && <div style={{ fontSize: 11, color: '#f88' }}>Vai trò hệ thống</div>}
                 </div>
               ))}
             </div>
@@ -1309,6 +1426,7 @@ function PermissionsManagementPanel() {
   const [loading, setLoading] = React.useState(false);
   const [statusPerm, setStatusPerm] = React.useState(null);
   const [newPerm, setNewPerm] = React.useState({ id: '', name: '', description: '', category: 'custom' });
+  const [editingPermId, setEditingPermId] = React.useState(null);
 
   async function fetchPermissions() {
     setLoading(true);
@@ -1346,6 +1464,34 @@ function PermissionsManagementPanel() {
     }
   }
 
+  async function updatePermission(e) {
+    e.preventDefault();
+    if (!editingPermId || !newPerm.name) {
+      setStatusPerm({ ok: false, msg: 'Tên không được để trống' });
+      return;
+    }
+    setStatusPerm(null);
+    try {
+      const res = await authFetch(`${API_BASE}/api/admin/permissions/${editingPermId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newPerm.name,
+          description: newPerm.description,
+          category: newPerm.category
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Thất bại');
+      setStatusPerm({ ok: true, msg: `Permission cập nhật: ${newPerm.name}` });
+      setPermissions(prev => prev.map(p => p.id === editingPermId ? data : p));
+      setEditingPermId(null);
+      setNewPerm({ id: '', name: '', description: '', category: 'custom' });
+    } catch (err) {
+      setStatusPerm({ ok: false, msg: err.message });
+    }
+  }
+
   async function deletePermission(permId, permName) {
     if (!confirm(`Xóa quyền "${permName}"?`)) return;
     setStatusPerm(null);
@@ -1354,9 +1500,28 @@ function PermissionsManagementPanel() {
       if (!res.ok) throw new Error((await res.json()).error || 'Thất bại');
       setStatusPerm({ ok: true, msg: `Đã xóa quyền: ${permName}` });
       setPermissions(prev => prev.filter(p => p.id !== permId));
+      if (editingPermId === permId) {
+        setEditingPermId(null);
+        setNewPerm({ id: '', name: '', description: '', category: 'custom' });
+      }
     } catch (err) {
       setStatusPerm({ ok: false, msg: err.message });
     }
+  }
+
+  function startEditPermission(perm) {
+    setEditingPermId(perm.id);
+    setNewPerm({
+      id: perm.id,
+      name: perm.name,
+      description: perm.description,
+      category: perm.category || 'custom'
+    });
+  }
+
+  function cancelEdit() {
+    setEditingPermId(null);
+    setNewPerm({ id: '', name: '', description: '', category: 'custom' });
   }
 
   return (
@@ -1364,23 +1529,40 @@ function PermissionsManagementPanel() {
       <AdminAlert status={statusPerm} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div>
-          <h4>Tạo Permission Mới</h4>
-          <form onSubmit={createPermission} className="admin-form">
+          <h4>{editingPermId ? 'Sửa Permission' : 'Tạo Permission Mới'}</h4>
+          <form onSubmit={editingPermId ? updatePermission : createPermission} className="admin-form">
             <div className="form-row">
               <label>ID quyền:</label>
-              <input value={newPerm.id} onChange={e => setNewPerm({ ...newPerm, id: e.target.value })} placeholder="view_special_content" />
+              <input
+                value={newPerm.id}
+                onChange={e => setNewPerm({ ...newPerm, id: e.target.value })}
+                placeholder="view_special_content"
+                disabled={editingPermId ? true : false}
+                style={{ opacity: editingPermId ? 0.6 : 1 }}
+              />
             </div>
             <div className="form-row">
               <label>Tên quyền:</label>
-              <input value={newPerm.name} onChange={e => setNewPerm({ ...newPerm, name: e.target.value })} placeholder="Xem nội dung đặc biệt" />
+              <input
+                value={newPerm.name}
+                onChange={e => setNewPerm({ ...newPerm, name: e.target.value })}
+                placeholder="Xem nội dung đặc biệt"
+              />
             </div>
             <div className="form-row">
               <label>Mô tả:</label>
-              <input value={newPerm.description} onChange={e => setNewPerm({ ...newPerm, description: e.target.value })} placeholder="Mô tả..." />
+              <input
+                value={newPerm.description}
+                onChange={e => setNewPerm({ ...newPerm, description: e.target.value })}
+                placeholder="Mô tả..."
+              />
             </div>
             <div className="form-row">
               <label>Danh mục:</label>
-              <select value={newPerm.category} onChange={e => setNewPerm({ ...newPerm, category: e.target.value })}>
+              <select
+                value={newPerm.category}
+                onChange={e => setNewPerm({ ...newPerm, category: e.target.value })}
+              >
                 <option value="content">Nội dung</option>
                 <option value="admin">Quản trị</option>
                 <option value="user">Người dùng</option>
@@ -1388,7 +1570,16 @@ function PermissionsManagementPanel() {
                 <option value="custom">Tùy chỉnh</option>
               </select>
             </div>
-            <button type="submit" className="btn" style={{ width: '100%' }}>➕ Tạo Permission</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="submit" className="btn" style={{ width: '100%' }}>
+                {editingPermId ? '💾 Cập nhật Permission' : '➕ Tạo Permission'}
+              </button>
+              {editingPermId && (
+                <button type="button" className="btn secondary" onClick={cancelEdit} style={{ width: '100%' }}>
+                  ✕ Hủy
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
@@ -1397,11 +1588,238 @@ function PermissionsManagementPanel() {
           {loading ? <p style={{ color: '#666' }}>Đang tải...</p> : (
             <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
               {permissions.map(p => (
-                <div key={p.id} style={{ background: '#0f0f1a', padding: 12, margin: '8px 0', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div
+                  key={p.id}
+                  style={{
+                    background: editingPermId === p.id ? 'rgba(136, 238, 255, 0.1)' : '#0f0f1a',
+                    padding: 12,
+                    margin: '8px 0',
+                    borderRadius: 6,
+                    border: editingPermId === p.id ? '1px solid #8ef' : '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
                   <div style={{ fontWeight: 'bold', color: '#8ef', marginBottom: 4 }}>{p.name}</div>
                   <div style={{ color: '#aaa', fontSize: 11, marginBottom: 4 }}>{p.description}</div>
                   <div style={{ fontSize: 11, color: '#9a9', marginBottom: 6 }}>📂 {p.category}</div>
-                  <button className="btn secondary" onClick={() => deletePermission(p.id, p.name)} style={{ fontSize: 11, width: '100%' }}>🗑️ Xóa</button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      className="btn"
+                      onClick={() => startEditPermission(p)}
+                      style={{ fontSize: 11, flex: 1 }}
+                    >
+                      ✏️ Sửa
+                    </button>
+                    <button
+                      className="btn secondary"
+                      onClick={() => deletePermission(p.id, p.name)}
+                      style={{ fontSize: 11, flex: 1 }}
+                    >
+                      🗑️ Xóa
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeaturesManagementPanel({ statusFeat, setStatusFeat }) {
+  const [features, setFeatures] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [newFeat, setNewFeat] = React.useState({ id: '', name: '', description: '', icon: '🎯' });
+  const [editingFeatId, setEditingFeatId] = React.useState(null);
+
+  async function fetchFeatures() {
+    setLoading(true);
+    try {
+      const res = await authFetch(`${API_BASE}/api/admin/features`);
+      if (!res.ok) throw new Error('Không thể lấy features');
+      setFeatures(await res.json());
+    } catch (err) {
+      setStatusFeat({ ok: false, msg: err.message });
+    } finally { setLoading(false); }
+  }
+
+  React.useEffect(() => { fetchFeatures(); }, []);
+
+  async function createFeature(e) {
+    e.preventDefault();
+    if (!newFeat.id || !newFeat.name) {
+      setStatusFeat({ ok: false, msg: 'ID và Name không được để trống' });
+      return;
+    }
+    setStatusFeat(null);
+    try {
+      const res = await authFetch(`${API_BASE}/api/admin/features`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newFeat)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Thất bại');
+      setStatusFeat({ ok: true, msg: `Feature tạo: ${newFeat.name}` });
+      setFeatures([...features, data]);
+      setNewFeat({ id: '', name: '', description: '', icon: '🎯' });
+    } catch (err) {
+      setStatusFeat({ ok: false, msg: err.message });
+    }
+  }
+
+  async function updateFeature(e) {
+    e.preventDefault();
+    if (!editingFeatId || !newFeat.name) {
+      setStatusFeat({ ok: false, msg: 'Tên không được để trống' });
+      return;
+    }
+    setStatusFeat(null);
+    try {
+      const res = await authFetch(`${API_BASE}/api/admin/features/${editingFeatId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newFeat.name,
+          description: newFeat.description,
+          icon: newFeat.icon
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Thất bại');
+      setStatusFeat({ ok: true, msg: `Feature cập nhật: ${newFeat.name}` });
+      setFeatures(prev => prev.map(f => f.id === editingFeatId ? data : f));
+      setEditingFeatId(null);
+      setNewFeat({ id: '', name: '', description: '', icon: '🎯' });
+    } catch (err) {
+      setStatusFeat({ ok: false, msg: err.message });
+    }
+  }
+
+  async function deleteFeature(featId, featName) {
+    if (!confirm(`Xóa tính năng "${featName}"?`)) return;
+    setStatusFeat(null);
+    try {
+      const res = await authFetch(`${API_BASE}/api/admin/features/${featId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error || 'Thất bại');
+      setStatusFeat({ ok: true, msg: `Đã xóa tính năng: ${featName}` });
+      setFeatures(prev => prev.filter(f => f.id !== featId));
+      if (editingFeatId === featId) {
+        setEditingFeatId(null);
+        setNewFeat({ id: '', name: '', description: '', icon: '🎯' });
+      }
+    } catch (err) {
+      setStatusFeat({ ok: false, msg: err.message });
+    }
+  }
+
+  function startEditFeature(feat) {
+    setEditingFeatId(feat.id);
+    setNewFeat({
+      id: feat.id,
+      name: feat.name,
+      description: feat.description,
+      icon: feat.icon || '🎯'
+    });
+  }
+
+  function cancelEdit() {
+    setEditingFeatId(null);
+    setNewFeat({ id: '', name: '', description: '', icon: '🎯' });
+  }
+
+  return (
+    <div>
+      <AdminAlert status={statusFeat} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div>
+          <h4>{editingFeatId ? 'Sửa Tính Năng' : 'Tạo Tính Năng Mới'}</h4>
+          <form onSubmit={editingFeatId ? updateFeature : createFeature} className="admin-form">
+            <div className="form-row">
+              <label>ID tính năng:</label>
+              <input
+                value={newFeat.id}
+                onChange={e => setNewFeat({ ...newFeat, id: e.target.value })}
+                placeholder="page_admin"
+                disabled={editingFeatId ? true : false}
+                style={{ opacity: editingFeatId ? 0.6 : 1 }}
+              />
+            </div>
+            <div className="form-row">
+              <label>Tên tính năng:</label>
+              <input
+                value={newFeat.name}
+                onChange={e => setNewFeat({ ...newFeat, name: e.target.value })}
+                placeholder="Trang Quản Trị"
+              />
+            </div>
+            <div className="form-row">
+              <label>Mô tả:</label>
+              <input
+                value={newFeat.description}
+                onChange={e => setNewFeat({ ...newFeat, description: e.target.value })}
+                placeholder="Mô tả..."
+              />
+            </div>
+            <div className="form-row">
+              <label>Icon:</label>
+              <input
+                value={newFeat.icon}
+                onChange={e => setNewFeat({ ...newFeat, icon: e.target.value })}
+                placeholder="🎯"
+                maxLength={2}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="submit" className="btn" style={{ width: '100%' }}>
+                {editingFeatId ? '💾 Cập nhật Feature' : '➕ Tạo Feature'}
+              </button>
+              {editingFeatId && (
+                <button type="button" className="btn secondary" onClick={cancelEdit} style={{ width: '100%' }}>
+                  ✕ Hủy
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <h4>Danh sách tính năng</h4>
+          {loading ? <p style={{ color: '#666' }}>Đang tải...</p> : (
+            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+              {features.map(f => (
+                <div
+                  key={f.id}
+                  style={{
+                    background: editingFeatId === f.id ? 'rgba(136, 238, 255, 0.1)' : '#0f0f1a',
+                    padding: 12,
+                    margin: '8px 0',
+                    borderRadius: 6,
+                    border: editingFeatId === f.id ? '1px solid #8ef' : '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  <div style={{ fontWeight: 'bold', color: '#8ef', marginBottom: 4 }}>
+                    {f.icon} {f.name}
+                  </div>
+                  <div style={{ color: '#aaa', fontSize: 11, marginBottom: 4 }}>{f.description}</div>
+                  <div style={{ fontSize: 11, color: '#9a9', marginBottom: 6 }}>ID: {f.id}</div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      className="btn"
+                      onClick={() => startEditFeature(f)}
+                      style={{ fontSize: 11, flex: 1 }}
+                    >
+                      ✏️ Sửa
+                    </button>
+                    <button
+                      className="btn secondary"
+                      onClick={() => deleteFeature(f.id, f.name)}
+                      style={{ fontSize: 11, flex: 1 }}
+                    >
+                      🗑️ Xóa
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
