@@ -1187,9 +1187,10 @@ function UsersManagementPanel() {
 function RolesManagementPanel() {
   const [roles, setRoles] = React.useState([]);
   const [permissions, setPermissions] = React.useState([]);
+  const [features, setFeatures] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [statusRole, setStatusRole] = React.useState(null);
-  const [newRole, setNewRole] = React.useState({ id: '', name: '', description: '', permissions: [] });
+  const [newRole, setNewRole] = React.useState({ id: '', name: '', description: '', permissions: [], features: [] });
   const [editingRoleId, setEditingRoleId] = React.useState(null);
 
   async function fetchRoles() {
@@ -1197,7 +1198,8 @@ function RolesManagementPanel() {
     try {
       const res = await authFetch(`${API_BASE}/api/admin/roles`);
       if (!res.ok) throw new Error('Không thể lấy roles');
-      setRoles(await res.json());
+      const data = await res.json();
+      setRoles(Array.isArray(data) ? data : []);
     } catch (err) {
       setStatusRole({ ok: false, msg: err.message });
     } finally { setLoading(false); }
@@ -1207,15 +1209,44 @@ function RolesManagementPanel() {
     try {
       const res = await authFetch(`${API_BASE}/api/admin/permissions`);
       if (!res.ok) throw new Error('Không thể lấy permissions');
-      setPermissions(await res.json());
+      const data = await res.json();
+      setPermissions(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching permissions:', err);
+      setPermissions([]);
     }
   }
+
+async function fetchFeatures() {
+  try {
+    const res = await authFetch(`${API_BASE}/api/admin/features`);
+    console.log(`${API_BASE}/api/admin/features`);
+    const text = await res.text(); // 👈 đọc raw trước
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("Response không phải JSON:", text);
+      throw new Error("API không trả JSON");
+    }
+
+    if (!res.ok) {
+      console.error('Features API error:', res.status, data);
+      throw new Error(data.error || 'Không thể lấy features');
+    }
+
+    setFeatures(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error('Error fetching features:', err);
+    setFeatures([]);
+  }
+}
 
   React.useEffect(() => {
     fetchRoles();
     fetchPermissions();
+    fetchFeatures();
   }, []);
 
   async function createRole(e) {
@@ -1241,7 +1272,7 @@ function RolesManagementPanel() {
       if (!res.ok) throw new Error(data.error || 'Thất bại');
       setStatusRole({ ok: true, msg: `Role tạo: ${newRole.name}` });
       setRoles([...roles, data]);
-      setNewRole({ id: '', name: '', description: '', permissions: [] });
+      setNewRole({ id: '', name: '', description: '', permissions: [], features: [] });
     } catch (err) {
       setStatusRole({ ok: false, msg: err.message });
     }
@@ -1261,7 +1292,8 @@ function RolesManagementPanel() {
         body: JSON.stringify({
           name: newRole.name,
           description: newRole.description,
-          permissions: newRole.permissions
+          permissions: newRole.permissions,
+          features: newRole.features
         })
       });
       const data = await res.json();
@@ -1269,7 +1301,7 @@ function RolesManagementPanel() {
       setStatusRole({ ok: true, msg: `Role cập nhật: ${data.name}` });
       setRoles(prev => prev.map(r => r.id === editingRoleId ? data : r));
       setEditingRoleId(null);
-      setNewRole({ id: '', name: '', description: '', permissions: [] });
+      setNewRole({ id: '', name: '', description: '', permissions: [], features: [] });
     } catch (err) {
       setStatusRole({ ok: false, msg: err.message });
     }
@@ -1285,7 +1317,7 @@ function RolesManagementPanel() {
       setRoles(prev => prev.filter(r => r.id !== roleId));
       if (editingRoleId === roleId) {
         setEditingRoleId(null);
-        setNewRole({ id: '', name: '', description: '', permissions: [] });
+        setNewRole({ id: '', name: '', description: '', permissions: [], features: [] });
       }
     } catch (err) {
       setStatusRole({ ok: false, msg: err.message });
@@ -1298,13 +1330,14 @@ function RolesManagementPanel() {
       id: role.id,
       name: role.name,
       description: role.description,
-      permissions: role.permissions || []
+      permissions: role.permissions || [],
+      features: role.features || []
     });
   }
 
   function cancelEdit() {
     setEditingRoleId(null);
-    setNewRole({ id: '', name: '', description: '', permissions: [] });
+    setNewRole({ id: '', name: '', description: '', permissions: [], features: [] });
   }
 
   return (
@@ -1360,6 +1393,26 @@ function RolesManagementPanel() {
                 ))}
               </div>
             </div>
+            <div className="form-row">
+              <label>Tính Năng / Trang:</label>
+              <div style={{ background: '#000', padding: 8, borderRadius: 4, maxHeight: '150px', overflowY: 'auto' }}>
+                {features.map(f => (
+                  <label key={f.id} style={{ display: 'block', margin: '4px 0', fontSize: 12 }}>
+                    <input
+                      type="checkbox"
+                      checked={newRole.features.includes(f.id)}
+                      onChange={e => setNewRole({
+                        ...newRole,
+                        features: e.target.checked
+                          ? [...newRole.features, f.id]
+                          : newRole.features.filter(fid => fid !== f.id)
+                      })}
+                    />
+                    {' '}{f.icon} {f.name}
+                  </label>
+                ))}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="submit" className="btn" style={{ width: '100%' }}>
                 {editingRoleId ? '💾 Cập nhật Vai Trò' : '➕ Tạo Vai Trò'}
@@ -1391,6 +1444,7 @@ function RolesManagementPanel() {
                   <div style={{ fontWeight: 'bold', color: r.is_system ? '#f88' : '#8ef', marginBottom: 4 }}>{r.name}</div>
                   <div style={{ color: '#aaa', fontSize: 11, marginBottom: 6 }}>{r.description}</div>
                   <div style={{ fontSize: 11, color: '#9a9', marginBottom: 6 }}>Số quyền: {r.permissions?.length || 0}</div>
+                  <div style={{ fontSize: 11, color: '#9a9', marginBottom: 6 }}>Số tính năng: {r.features?.length || 0}</div>
                   {!r.is_system ? (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button
@@ -1433,7 +1487,8 @@ function PermissionsManagementPanel() {
     try {
       const res = await authFetch(`${API_BASE}/api/admin/permissions`);
       if (!res.ok) throw new Error('Không thể lấy permissions');
-      setPermissions(await res.json());
+      const data = await res.json();
+      setPermissions(Array.isArray(data) ? data : []);
     } catch (err) {
       setStatusPerm({ ok: false, msg: err.message });
     } finally { setLoading(false); }
@@ -1637,8 +1692,12 @@ function FeaturesManagementPanel({ statusFeat, setStatusFeat }) {
     setLoading(true);
     try {
       const res = await authFetch(`${API_BASE}/api/admin/features`);
-      if (!res.ok) throw new Error('Không thể lấy features');
-      setFeatures(await res.json());
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('Features API error:', res.status, data);
+        throw new Error(data.error || 'Không thể lấy features');
+      }
+      setFeatures(Array.isArray(data) ? data : []);
     } catch (err) {
       setStatusFeat({ ok: false, msg: err.message });
     } finally { setLoading(false); }

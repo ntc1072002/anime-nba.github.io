@@ -1427,6 +1427,7 @@ app.get('/api/admin/roles/:roleId', authenticateJWT, requireRole('owner'), async
         id: roleId,
         name: roleId,
         permissions: [],
+        features: [],
         is_system: true,
         error: 'System role or not found'
       });
@@ -1436,6 +1437,7 @@ app.get('/api/admin/roles/:roleId', authenticateJWT, requireRole('owner'), async
       id: doc.id,
       ...doc.data(),
       permissions: doc.data().permissions || [],
+      features: doc.data().features || [],
       created_at: doc.data().created_at?.toDate?.()?.toISOString?.() || null,
       updated_at: doc.data().updated_at?.toDate?.()?.toISOString?.() || null
     });
@@ -1447,19 +1449,21 @@ app.get('/api/admin/roles/:roleId', authenticateJWT, requireRole('owner'), async
 
 app.post('/api/admin/roles', authenticateJWT, requireRole('owner'), async (req, res) => {
   try {
-    const { id, name, description, permissions } = req.body;
+    const { id, name, description, permissions, features } = req.body;
     if (!id || !name) return res.status(400).json({ error: 'id and name required' });
     if (id === 'owner' || id === 'vip' || id === 'user') {
       return res.status(400).json({ error: 'Cannot create system roles' });
     }
 
     const permArray = Array.isArray(permissions) ? permissions : [];
+    const featArray = Array.isArray(features) ? features : [];
     const newRole = {
       id,
       name,
       description: description || '',
       level: 25,
       permissions: permArray,
+      features: featArray,
       is_system: false,
       created_at: new Date(),
       updated_at: new Date()
@@ -1480,12 +1484,13 @@ app.put('/api/admin/roles/:roleId', authenticateJWT, requireRole('owner'), async
       return res.status(400).json({ error: 'Cannot modify system roles' });
     }
 
-    const { name, description, permissions, level } = req.body;
+    const { name, description, permissions, features, level } = req.body;
     const updates = { updated_at: new Date() };
 
     if (name) updates.name = name;
     if (description !== undefined) updates.description = description;
     if (Array.isArray(permissions)) updates.permissions = permissions;
+    if (Array.isArray(features)) updates.features = features;
     if (level !== undefined) updates.level = level;
 
     await firestore.collection('roles').doc(roleId).update(updates);
@@ -1596,6 +1601,106 @@ app.delete('/api/admin/permissions/:permissionId', authenticateJWT, requireRole(
     res.json({ success: true });
   } catch (err) {
     console.error('DELETE /api/admin/permissions/:permissionId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ================== ADMIN - FEATURES ================== */
+// Test endpoint (no auth)
+app.get('/api/admin/features-test', async (_, res) => {
+  try {
+    console.log('Features test endpoint called');
+    const snap = await firestore.collection('features').get();
+    console.log('Firestore query done, docs:', snap.docs.length);
+    const features = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      created_at: d.data().created_at?.toDate?.()?.toISOString?.() || null,
+      updated_at: d.data().updated_at?.toDate?.()?.toISOString?.() || null
+    }));
+    console.log('Returning', features.length, 'features');
+    res.json(features);
+  } catch (err) {
+    console.error('GET /api/admin/features-test error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all features (owner only)
+app.get('/api/admin/features', authenticateJWT, requireRole('owner'), async (_, res) => {
+  try {
+    const snap = await firestore.collection('features').get();
+    const features = snap.docs.map(d => ({
+      id: d.id,
+      ...d.data(),
+      created_at: d.data().created_at?.toDate?.()?.toISOString?.() || null,
+      updated_at: d.data().updated_at?.toDate?.()?.toISOString?.() || null
+    }));
+    console.log('GET /api/admin/features - returning', features.length, 'features');
+    res.json(features);
+  } catch (err) {
+    console.error('GET /api/admin/features error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create feature (owner only)
+app.post('/api/admin/features', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { id, name, description, icon } = req.body;
+    if (!id || !name) return res.status(400).json({ error: 'id and name required' });
+
+    const newFeature = {
+      id,
+      name,
+      description: description || '',
+      icon: icon || '🎯',
+      created_at: new Date(),
+      updated_at: new Date()
+    };
+
+    await firestore.collection('features').doc(id).set(newFeature);
+    res.status(201).json(newFeature);
+  } catch (err) {
+    console.error('POST /api/admin/features error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update feature (owner only)
+app.put('/api/admin/features/:featureId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { featureId } = req.params;
+    const { name, description, icon } = req.body;
+    
+    const updates = { updated_at: new Date() };
+    if (name) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (icon !== undefined) updates.icon = icon;
+
+    await firestore.collection('features').doc(featureId).update(updates);
+    const doc = await firestore.collection('features').doc(featureId).get();
+    
+    res.json({
+      id: doc.id,
+      ...doc.data(),
+      created_at: doc.data().created_at?.toDate?.()?.toISOString?.() || null,
+      updated_at: doc.data().updated_at?.toDate?.()?.toISOString?.() || null
+    });
+  } catch (err) {
+    console.error('PUT /api/admin/features/:featureId error', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete feature (owner only)
+app.delete('/api/admin/features/:featureId', authenticateJWT, requireRole('owner'), async (req, res) => {
+  try {
+    const { featureId } = req.params;
+    await firestore.collection('features').doc(featureId).delete();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('DELETE /api/admin/features/:featureId error', err);
     res.status(500).json({ error: err.message });
   }
 });
